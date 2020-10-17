@@ -4,19 +4,17 @@ from xmrnodes import config
 
 
 data_dir = getattr(config, 'DATA_FOLDER', './data')
-db = SqliteDatabase(f"{data_dir}/db/sqlite.db")
+db = SqliteDatabase(f"{data_dir}/sqlite.db")
 
 class Node(Model):
     id = AutoField()
-    scheme = CharField()
-    address = CharField()
-    port = IntegerField()
-    version = CharField(null=True)
+    url = CharField()
     tor = BooleanField(default=False)
     available = BooleanField(default=False)
-    mainnet = BooleanField(default=False)
+    validated = BooleanField(default=False)
+    nettype = CharField(null=True)
     datetime_entered = DateTimeField(default=datetime.now)
-    datetime_checked = DateTimeField(default=datetime.now)
+    datetime_checked = DateTimeField(default=None, null=True)
     datetime_failed = DateTimeField(default=None, null=True)
 
     class Meta:

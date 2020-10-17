@@ -9,13 +9,25 @@
   </div>
 
   {% for node in nodes %}
-  {{ node }}<br>
+  {{ node.url }}<br>
   {% endfor %}
 
-  <form id="addnode" method="POST">
-    <label>Node URL:</label>
-    <input type="text" name="url"/>
-    <input type="submit" value="Submit" name="submit" class="submit" id="submit" />
+  <form method="POST" action="{{ url_for('add') }}">
+      {{ form.csrf_token }}
+      {% for f in form %}
+        {% if f.name != 'csrf_token' %}
+          <div class="form-group">
+            {{ f.label }}
+            {{ f }}
+          </div>
+        {% endif %}
+      {% endfor %}
+      <ul>
+      {% for field, errors in form.errors.items() %}
+          <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
+      {% endfor %}
+    </ul>
+      <input type="submit" value="Send" class="btn btn-link btn-outline btn-xl">
   </form>
 
 
