@@ -17,6 +17,7 @@ class Node(Model):
     datetime_entered = DateTimeField(default=datetime.now)
     datetime_checked = DateTimeField(default=None, null=True)
     datetime_failed = DateTimeField(default=None, null=True)
+    fail_reason = CharField(null=True)
 
     class Meta:
         database = db

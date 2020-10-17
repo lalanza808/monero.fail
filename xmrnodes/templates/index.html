@@ -8,6 +8,7 @@
     <h3>Add Node</h3>
   </div>
 
+  {% if nodes %}
   <table>
     <tr>
     <th>URL</th>
@@ -28,6 +29,7 @@
     </tr>
     {% endfor %}
   </table>
+  {% endif %}
 
 
   <form method="POST" action="{{ url_for('add') }}">
