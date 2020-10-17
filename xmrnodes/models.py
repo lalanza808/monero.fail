@@ -14,7 +14,7 @@ class Node(Model):
     validated = BooleanField(default=False)
     nettype = CharField(null=True)
     is_monero = BooleanField(default=False)
-    datetime_entered = DateTimeField(default=datetime.now)
+    datetime_entered = DateTimeField(default=datetime.utcnow)
     datetime_checked = DateTimeField(default=None, null=True)
     datetime_failed = DateTimeField(default=None, null=True)
     fail_reason = CharField(null=True)

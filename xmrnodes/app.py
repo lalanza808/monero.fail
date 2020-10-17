@@ -1,3 +1,4 @@
+import arrow
 import json
 import requests
 import re
@@ -32,7 +33,7 @@ def index():
         flash("Wow, wtf hackerman. Cool it.")
         page = 1
 
-    nodes = Node.select().where(Node.available==True).order_by(
+    nodes = Node.select().where(Node.available==True).where(Node.is_monero==True).order_by(
         Node.datetime_entered.desc()
     )
     paginated = nodes.paginate(page, itp)
@@ -76,7 +77,7 @@ def add():
 def validate():
     nodes = Node.select().where(Node.validated == False)
     for node in nodes:
-        now = datetime.now()
+        now = datetime.utcnow()
         is_onion = node.url.split(":")[1].endswith(".onion")
         logging.info(f"Attempting to validate {node.url}")
         if is_onion:
@@ -114,13 +115,10 @@ def validate():
             logging.info("failed for reasons unknown")
             node.delete_instance()
 
-@app.route("/about")
-def about():
-    return render_template("about.html")
-
-@app.errorhandler(404)
-def not_found(error):
-    return redirect("/")
+@app.template_filter('humanize')
+def humanize(d):
+    t = arrow.get(d, 'UTC')
+    return t.humanize()
 
 if __name__ == "__main__":
     app.run()
