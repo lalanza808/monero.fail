@@ -13,6 +13,7 @@ class Node(Model):
     available = BooleanField(default=False)
     validated = BooleanField(default=False)
     nettype = CharField(null=True)
+    last_height = IntegerField(null=True)
     is_monero = BooleanField(default=False)
     datetime_entered = DateTimeField(default=datetime.utcnow)
     datetime_checked = DateTimeField(default=None, null=True)

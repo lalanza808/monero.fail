@@ -33,7 +33,7 @@ def index():
         flash("Wow, wtf hackerman. Cool it.")
         page = 1
 
-    nodes = Node.select().where(Node.available==True).where(Node.is_monero==True).order_by(
+    nodes = Node.select().where(Node.validated==True).where(Node.is_monero==True).order_by(
         Node.datetime_entered.desc()
     )
     paginated = nodes.paginate(page, itp)
@@ -73,6 +73,32 @@ def add():
                 node.save()
     return redirect("/")
 
+@app.cli.command("check")
+def check():
+    nodes = Node.select().where(Node.validated == True)
+    for node in nodes:
+        now = datetime.utcnow()
+        logging.info(f"Attempting to check {node.url}")
+        try:
+            r = requests.get(node.url + "/get_info", timeout=5)
+            r.raise_for_status()
+            assert "status" in r.json()
+            assert "offline" in r.json()
+            assert "height" in r.json()
+            if r.json()["status"] == "OK":
+                logging.info("success")
+                node.available = True
+                node.last_height = r.json()["height"]
+            else:
+                raise
+        except:
+            logging.info("fail")
+            node.datetime_failed = now
+            node.available = False
+        finally:
+            node.datetime_checked = now
+            node.save()
+
 @app.cli.command("validate")
 def validate():
     nodes = Node.select().where(Node.validated == False)
@@ -84,7 +110,7 @@ def validate():
             logging.info("onion address found")
             node.is_tor = True
         try:
-            r = requests.get(node.url + "/get_info", timeout=3)
+            r = requests.get(node.url + "/get_info", timeout=5)
             r.raise_for_status()
             assert "height" in r.json()
             assert "nettype" in r.json()
@@ -94,6 +120,7 @@ def validate():
                 node.nettype = nettype
                 node.available = True
                 node.validated = True
+                node.last_height = r.json()["height"]
                 node.datetime_checked = now
                 node.is_monero = is_monero(node.url)
                 node.save()

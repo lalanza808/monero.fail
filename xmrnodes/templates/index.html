@@ -37,6 +37,7 @@
           <th>Tor</th>
           <th>Available</th>
           <th>Network</th>
+          <th>Height</th>
           <th>Last Checked</th>
         </tr>
       </thead>
@@ -47,6 +48,7 @@
           <td>{{ node.is_tor }}</td>
           <td>{{ node.available }}</td>
           <td>{{ node.nettype }}</td>
+          <td>{{ node.last_height }}</td>
           <td>{{ node.datetime_checked | humanize }}</td>
         </tr>
       {% endfor %}

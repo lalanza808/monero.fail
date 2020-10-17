@@ -8,7 +8,7 @@ def is_monero(url):
         "76ee3cc98646292206cd3e86f74d88b4dcc1d937088645e9b0cbca84b7ce74eb"  #stagenet
     ]
     try:
-        r = r_get(url + "/json_rpc", json=data)
+        r = r_get(url + "/json_rpc", json=data, timeout=5)
         r.raise_for_status()
         assert "result" in r.json()
         is_xmr = r.json()["result"]["block_header"]["hash"] in known_hashes
