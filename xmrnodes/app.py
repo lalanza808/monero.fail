@@ -34,11 +34,12 @@ def index():
 
     nodes = Node.select().where(Node.available==True).order_by(
         Node.datetime_entered.desc()
-    ).paginate(page, itp)
-    total_pages = Node.select().count() / itp
+    )
+    paginated = nodes.paginate(page, itp)
+    total_pages = nodes.count() / itp
     return render_template(
         "index.html",
-        nodes=nodes,
+        nodes=paginated,
         page=page,
         total_pages=total_pages,
         form=form
@@ -119,7 +120,6 @@ def about():
 
 @app.errorhandler(404)
 def not_found(error):
-    flash("nothing there, brah")
     return redirect("/")
 
 if __name__ == "__main__":

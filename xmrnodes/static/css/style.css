@@ -1,0 +1,25 @@
+.center {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.section {
+  margin-bottom: 1em;
+}
+
+.btn {
+  margin: .5em;
+}
+
+#footer {
+  padding-top: 4em;
+}
+
+input[type="text"] {
+  width: 50%;
+  text-align: center;
+}
+
+.flashes {
+  padding-top: 1em;
+}

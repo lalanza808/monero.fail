@@ -2,62 +2,68 @@
 
 {% block content %}
 
-<div class="container" style="text-align:center;">
+<div id="index" class="container">
 
-  <div class="title">
-    <h3>Add Node</h3>
+  <div id="addnode" class="pure-g center section">
+    <div class="title pure-u-1">
+      <h2>Add A Node</h2>
+    </div>
+    <form method="POST" action="{{ url_for('add') }}" class="pure-form pure-u-1">
+        {{ form.csrf_token }}
+        {% for f in form %}
+          {% if f.name != 'csrf_token' %}
+            <div class="form-group">
+              {{ f.label }}
+              {{ f }}
+            </div>
+          {% endif %}
+        {% endfor %}
+        <ul>
+        {% for field, errors in form.errors.items() %}
+            <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
+        {% endfor %}
+        </ul>
+        <button type="submit" class="pure-button pure-button-primary">Submit</button>
+    </form>
   </div>
 
-  {% if nodes %}
-  <table>
-    <tr>
-    <th>URL</th>
-    <th>Tor</th>
-    <th>Available</th>
-    <th>Network</th>
-    <th>Is Monero</th>
-    <th>Last Checked</th>
-    </tr>
-    {% for node in nodes %}
-    <tr>
-      <td>{{ node.url }}</td>
-      <td>{{ node.is_tor }}</td>
-      <td>{{ node.available }}</td>
-      <td>{{ node.nettype }}</td>
-      <td>{{ node.is_monero }}</td>
-      <td>{{ node.datetime_checked }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {% endif %}
-
-
-  <form method="POST" action="{{ url_for('add') }}">
-      {{ form.csrf_token }}
-      {% for f in form %}
-        {% if f.name != 'csrf_token' %}
-          <div class="form-group">
-            {{ f.label }}
-            {{ f }}
-          </div>
-        {% endif %}
+  <div id="nodes" class="pure-u-1 center section">
+    <h2>Find a Node</h2>
+    {% if nodes %}
+    <table class="pure-table pure-table-horizontal pure-table-striped center">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Tor</th>
+          <th>Available</th>
+          <th>Network</th>
+          <th>Is Monero</th>
+          <th>Last Checked</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for node in nodes %}
+        <tr>
+          <td>{{ node.url }}</td>
+          <td>{{ node.is_tor }}</td>
+          <td>{{ node.available }}</td>
+          <td>{{ node.nettype }}</td>
+          <td>{{ node.is_monero }}</td>
+          <td>{{ node.datetime_checked }}</td>
+        </tr>
       {% endfor %}
-      <ul>
-      {% for field, errors in form.errors.items() %}
-          <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
-      {% endfor %}
-    </ul>
-      <input type="submit" value="Send" class="btn btn-link btn-outline btn-xl">
-  </form>
-
-
-  {% if page > 1 %}
-    <a href="/?page={{ page - 1 }}">Back</a>
-  {% endif %}
-
-  {% if page < total_pages and total_pages > 0 %}
-    <a href="/?page={{ page + 1 }}">Next</a>
-  {% endif %}
+      </tbody>
+    </table>
+    {% if page > 1 %}
+      <a href="/?page={{ page - 1 }}" class="pure-button btn">Back</a>
+    {% endif %}
+    {% if page < total_pages and total_pages > 0 %}
+      <a href="/?page={{ page + 1 }}" class="pure-button btn">Next</a>
+    {% endif %}
+    {% else %}
+    <p>No nodes in the database yet...</p>
+    {% endif %}
+  </div>
 
 </div>
 

@@ -23,9 +23,10 @@
      <meta name="msapplication-TileColor" content="#da532c">
      <meta name="keywords" content="wownero, monero, xmr, bitmonero, cryptocurrency">
 
-     <!-- <link href="/static/css/wow.css" rel="stylesheet"> -->
-     <link href="/static/css/noty-relax.css" rel="stylesheet">
-     <link href="/static/css/noty.css" rel="stylesheet">
+     <link href="/static/css/normalize.css" rel="stylesheet">
+     <link href="/static/css/pure.css" rel="stylesheet">
+     <link href="/static/css/pure-grids.css" rel="stylesheet">
+     <link href="/static/css/style.css" rel="stylesheet">
      <title>XMR Nodes</title>
  </head>
 
@@ -33,7 +34,7 @@
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul class=flashes>
+    <ul class="flashes pure-u-1 center">
     {% for message in messages %}
       <li>{{ message }}</li>
     {% endfor %}
@@ -45,16 +46,11 @@
  {% block content %} {% endblock %}
 
  <!-- Footer -->
- <footer class="bg-dark footer">
-     <div class="container">
-         <p class="m-0 text-center text-white">XMR Nodes 2020</p>
-     </div>
- </footer>
-
- <!-- Scripts -->
- <script src="/static/js/jquery.min.js"></script>
- <script src="/static/js/noty.js"></script>
- <script src="/static/js/app.js"></script>
+ <div id="footer" class="center">
+   <a href="https://twitter.com/lza_menace" target="_blank">Holler at me</a>
+   -
+   <a href="https://github.com/lalanza808/monero-node-lists" target="_blank">Source Code</a>
+ </div>
 
  </body>
  </html>
