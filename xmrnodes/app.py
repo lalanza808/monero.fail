@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
+from xmrnodes.helpers import is_monero
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node
 
@@ -65,7 +66,7 @@ def add():
             if Node.select().where(Node.url == url).exists():
                 flash("This node is already in the database.")
             else:
-                flash("Seems like a valid node. Added to the database and will check soon.")
+                flash("Seems like a valid node URL. Added to the database and will check soon.")
                 node = Node(url=url)
                 node.save()
     return redirect("/")
@@ -79,7 +80,7 @@ def validate():
         logging.info(f"Attempting to validate {node.url}")
         if is_onion:
             logging.info("onion address found")
-            node.tor = True
+            node.is_tor = True
         try:
             r = requests.get(node.url + "/get_info", timeout=3)
             r.raise_for_status()
@@ -92,6 +93,7 @@ def validate():
                 node.available = True
                 node.validated = True
                 node.datetime_checked = now
+                node.is_monero = is_monero(node.url)
                 node.save()
             else:
                 logging.info("unexpected nettype")

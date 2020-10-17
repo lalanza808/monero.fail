@@ -8,9 +8,27 @@
     <h3>Add Node</h3>
   </div>
 
-  {% for node in nodes %}
-  {{ node.url }}<br>
-  {% endfor %}
+  <table>
+    <tr>
+    <th>URL</th>
+    <th>Tor</th>
+    <th>Available</th>
+    <th>Network</th>
+    <th>Is Monero</th>
+    <th>Last Checked</th>
+    </tr>
+    {% for node in nodes %}
+    <tr>
+      <td>{{ node.url }}</td>
+      <td>{{ node.is_tor }}</td>
+      <td>{{ node.available }}</td>
+      <td>{{ node.nettype }}</td>
+      <td>{{ node.is_monero }}</td>
+      <td>{{ node.datetime_checked }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
 
   <form method="POST" action="{{ url_for('add') }}">
       {{ form.csrf_token }}
