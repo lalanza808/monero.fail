@@ -46,7 +46,13 @@
         <tr>
           <td>{{ node.url }}</td>
           <td>{{ node.is_tor }}</td>
-          <td>{{ node.available }}</td>
+          <td>
+            {% if node.available %}
+              <div class="icon-check" style="color:green;"></div>
+            {% else %}
+              <div class="icon-close" style="color:red;"></div>
+            {% endif %}
+          </td>
           <td>{{ node.nettype }}</td>
           <td>{{ node.last_height }}</td>
           <td>{{ node.datetime_checked | humanize }}</td>
