@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
-from xmrnodes.helpers import is_monero
+from xmrnodes.helpers import determine_crypto
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node
 
@@ -33,7 +33,16 @@ def index():
         flash("Wow, wtf hackerman. Cool it.")
         page = 1
 
-    nodes = Node.select().where(Node.validated==True).where(Node.is_monero==True).order_by(
+    nettype = request.args.get("nettype", "mainnet")
+    crypto = request.args.get("crypto", "monero")
+
+    nodes = Node.select().where(
+        Node.validated==True
+    ).where(
+        Node.nettype==nettype
+    ).where(
+        Node.crypto==crypto
+    ).order_by(
         Node.datetime_entered.desc()
     )
     paginated = nodes.paginate(page, itp)
@@ -115,6 +124,7 @@ def validate():
             assert "height" in r.json()
             assert "nettype" in r.json()
             nettype = r.json()["nettype"]
+            crypto = determine_crypto(node.url)
             logging.info("success")
             if nettype in ["mainnet", "stagenet", "testnet"]:
                 node.nettype = nettype
@@ -122,7 +132,7 @@ def validate():
                 node.validated = True
                 node.last_height = r.json()["height"]
                 node.datetime_checked = now
-                node.is_monero = is_monero(node.url)
+                node.crypto = crypto
                 node.save()
             else:
                 logging.info("unexpected nettype")

@@ -23,3 +23,11 @@ input[type="text"] {
 .flashes {
   padding-top: 1em;
 }
+
+.search-btn {
+  margin: 2em .5em 0 .5em;
+}
+
+.wownero {
+  background-color: rgb(235, 74, 206);
+}
