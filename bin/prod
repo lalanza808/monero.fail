@@ -3,7 +3,7 @@
 BASE=data/gunicorn
 
 source .venv/bin/activate
-export FLASK_APP=nodes/app.py
+export FLASK_APP=xmrnodes/app.py
 export FLASK_SECRETS=config.py
 export FLASK_DEBUG=0
 export FLASK_ENV=production
@@ -11,7 +11,7 @@ export FLASK_ENV=production
 mkdir -p $BASE
 
 gunicorn \
-  --bind 0.0.0.0:4000 "nodes.app:app" \
+  --bind 127.0.0.1:4000 "xmrnodes.app:app" \
   --daemon \
   --log-file $BASE/gunicorn.log \
   --pid $BASE/gunicorn.pid \

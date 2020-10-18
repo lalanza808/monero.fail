@@ -3,3 +3,4 @@ flask
 peewee
 gunicorn
 arrow
+flask_wtf
