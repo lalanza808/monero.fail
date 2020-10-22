@@ -3,8 +3,7 @@ from datetime import datetime
 from xmrnodes import config
 
 
-data_dir = getattr(config, 'DATA_DIR', './data')
-db = SqliteDatabase(f"{data_dir}/sqlite.db")
+db = SqliteDatabase(f"{config.DATA_DIR}/sqlite.db")
 
 class Node(Model):
     id = AutoField()
