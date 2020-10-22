@@ -3,6 +3,7 @@ import json
 import requests
 import re
 import logging
+import click
 from os import makedirs
 from datetime import datetime
 from flask import Flask, request, redirect
@@ -159,10 +160,24 @@ def export():
     export_dir = f"{config.DATA_DIR}/export.txt"
     nodes = Node.select().where(Node.validated == True)
     for node in nodes:
+        logging.info(f"Adding {node.url}")
         all_nodes.append(node.url)
     with open(export_dir, "w") as f:
         f.write("\n".join(all_nodes))
     logging.info(f"{nodes.count()} nodes written to {export_dir}")
+
+@app.cli.command("import")
+def import_():
+    all_nodes = []
+    export_dir = f"{config.DATA_DIR}/export.txt"
+    with open(export_dir, 'r') as f:
+        for url in f.readlines():
+            n = url.rstrip()
+            all_nodes.append(n)
+            logging.info(f"Adding {n}")
+            node = Node(url=n)
+            node.save()
+    logging.info(f"{len(all_nodes)} node urls imported and ready to be validated")
 
 @app.template_filter("humanize")
 def humanize(d):
