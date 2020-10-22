@@ -153,6 +153,17 @@ def validate():
             logging.info("failed for reasons unknown")
             node.delete_instance()
 
+@app.cli.command("export")
+def export():
+    all_nodes = []
+    export_dir = f"{config.DATA_DIR}/export.txt"
+    nodes = Node.select().where(Node.validated == True)
+    for node in nodes:
+        all_nodes.append(node.url)
+    with open(export_dir, "w") as f:
+        f.write("\n".join(all_nodes))
+    logging.info(f"{nodes.count()} nodes written to {export_dir}")
+
 @app.template_filter("humanize")
 def humanize(d):
     t = arrow.get(d, "UTC")
