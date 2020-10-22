@@ -11,11 +11,12 @@ from urllib.parse import urlparse
 from xmrnodes.helpers import determine_crypto
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node
+from xmrnodes import config
 
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 app = Flask(__name__)
@@ -61,16 +62,16 @@ def add():
     if request.method == "POST":
         url = request.form.get("node_url")
         regex = re.compile(
-            r'^(?:http)s?://' # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-            r'localhost|' #localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-            r'(?::\d+)?' # optional port
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE
+            r"^(?:http)s?://" # http:// or https://
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|" #domain...
+            r"localhost|" #localhost...
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})" # ...or ip
+            r"(?::\d+)?" # optional port
+            r"(?:/?|[/?]\S+)$", re.IGNORECASE
         )
         re_match = re.match(regex, url)
         if re_match is None:
-            flash("This doesn't look like a valid URL")
+            flash("This doesn\"t look like a valid URL")
         else:
             _url = urlparse(url)
             url = f"{_url.scheme}://{_url.netloc}"
@@ -152,9 +153,9 @@ def validate():
             logging.info("failed for reasons unknown")
             node.delete_instance()
 
-@app.template_filter('humanize')
+@app.template_filter("humanize")
 def humanize(d):
-    t = arrow.get(d, 'UTC')
+    t = arrow.get(d, "UTC")
     return t.humanize()
 
 if __name__ == "__main__":
