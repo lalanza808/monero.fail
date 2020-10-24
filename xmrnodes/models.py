@@ -7,7 +7,7 @@ db = SqliteDatabase(f"{config.DATA_DIR}/sqlite.db")
 
 class Node(Model):
     id = AutoField()
-    url = CharField()
+    url = CharField(unique=True)
     is_tor = BooleanField(default=False)
     available = BooleanField(default=False)
     validated = BooleanField(default=False)
@@ -22,4 +22,13 @@ class Node(Model):
     class Meta:
         database = db
 
-db.create_tables([Node])
+class HealthCheck(Model):
+    id = AutoField()
+    node = ForeignKeyField(Node, backref='healthchecks')
+    datetime = DateTimeField(default=datetime.utcnow)
+    health = BooleanField()
+
+    class Meta:
+        database = db
+
+db.create_tables([Node, HealthCheck])

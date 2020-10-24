@@ -11,7 +11,7 @@ from flask import render_template, flash, url_for
 from urllib.parse import urlparse
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
 from xmrnodes.forms import SubmitNode
-from xmrnodes.models import Node
+from xmrnodes.models import Node, HealthCheck
 from xmrnodes import config
 
 
@@ -50,7 +50,7 @@ def index():
     )
     if onion:
         nodes = nodes.where(Node.is_tor==True)
-        
+
     paginated = nodes.paginate(page, itp)
     total_pages = nodes.count() / itp
     return render_template(
@@ -93,6 +93,7 @@ def check():
     nodes = Node.select().where(Node.validated == True)
     for node in nodes:
         now = datetime.utcnow()
+        hc = HealthCheck(node=node)
         logging.info(f"Attempting to check {node.url}")
         try:
             r = make_request(node.url)
@@ -103,15 +104,18 @@ def check():
                 logging.info("success")
                 node.available = True
                 node.last_height = r.json()["height"]
+                hc.health = True
             else:
                 raise
         except:
             logging.info("fail")
             node.datetime_failed = now
             node.available = False
+            hc.health = False
         finally:
             node.datetime_checked = now
             node.save()
+            hc.save()
 
 @app.cli.command("validate")
 def validate():
@@ -171,11 +175,14 @@ def import_():
     export_dir = f"{config.DATA_DIR}/export.txt"
     with open(export_dir, 'r') as f:
         for url in f.readlines():
-            n = url.rstrip()
-            all_nodes.append(n)
-            logging.info(f"Adding {n}")
-            node = Node(url=n)
-            node.save()
+            try:
+                n = url.rstrip()
+                logging.info(f"Adding {n}")
+                node = Node(url=n)
+                node.save()
+                all_nodes.append(n)
+            except:
+                pass
     logging.info(f"{len(all_nodes)} node urls imported and ready to be validated")
 
 @app.template_filter("humanize")

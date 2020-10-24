@@ -38,6 +38,7 @@
           <th>Network</th>
           <th>Height</th>
           <th>Last Checked</th>
+          <th>History</th>
         </tr>
       </thead>
       <tbody>
@@ -54,6 +55,12 @@
           <td>{{ node.nettype }}</td>
           <td>{{ node.last_height }}</td>
           <td>{{ node.datetime_checked | humanize }}</td>
+          <td>{% for hc in node.healthchecks %}
+            {% if loop.index > loop.length - 11 %}
+            <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
+            {% endif %}
+          {% endfor %}
+          </td>
         </tr>
       {% endfor %}
       </tbody>
