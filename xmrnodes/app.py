@@ -61,6 +61,9 @@ def index():
         form=form
     )
 
+@app.route("/resources")
+def resources():
+    return render_template("resources.html")
 
 @app.route("/add", methods=["GET", "POST"])
 def add():
