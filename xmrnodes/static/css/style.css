@@ -13,6 +13,7 @@
 
 #footer {
   padding-top: 4em;
+  padding-bottom: 4em;
 }
 
 input[type="text"] {
@@ -47,4 +48,12 @@ input[type="text"] {
 
 .glowing-red {
   background-color: #cd0000;
+}
+
+#node_url {
+  margin: 0 auto;
+}
+
+.pure-table {
+  margin: 0 auto;
 }

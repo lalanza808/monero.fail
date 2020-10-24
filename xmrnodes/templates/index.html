@@ -27,10 +27,11 @@
     </form>
   </div>
 
-  <div id="nodes" class="pure-u-1 center section">
-    <h2>Find a Node</h2>
+  <div id="nodes" class="pure-u-1 section">
+    <h2 class="center">Find a Node</h2>
+    <br>
     {% if nodes %}
-    <table class="pure-table pure-table-horizontal pure-table-striped center">
+    <table class="pure-table pure-table-horizontal pure-table-striped">
       <thead>
         <tr>
           <th>URL</th>
@@ -75,13 +76,15 @@
     <p>No nodes in the database yet...</p>
     {% endif %}
     <br>
-    <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=mainnet"><button class="pure-button search-btn">Mainnet</button></a>
-    <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=testnet"><button class="pure-button search-btn">Testnet</button></a>
-    <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=stagenet"><button class="pure-button search-btn">Stagenet</button></a>
-    {% if 'onion' not in request.args %}<a href="{% if 'nettype' in request.args or 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}onion=true"><button class="pure-button search-btn"><img src="/static/images/tor.svg" width=15px> Onion</button></a>{% endif %}
-    <a href="/?crypto=wownero"><button class="pure-button search-btn wownero"><img src="/static/images/wownero.svg" width=50px></button></a>
-    <br>
-    <a href="/"><button class="pure-button search-btn button-warning">Clear</button></a>
+    <div class="center" id="filters">
+      <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=mainnet"><button class="pure-button search-btn">Mainnet</button></a>
+      <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=testnet"><button class="pure-button search-btn">Testnet</button></a>
+      <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=stagenet"><button class="pure-button search-btn">Stagenet</button></a>
+      {% if 'onion' not in request.args %}<a href="{% if 'nettype' in request.args or 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}onion=true"><button class="pure-button search-btn"><img src="/static/images/tor.svg" width=15px> Onion</button></a>{% endif %}
+      <a href="/?crypto=wownero"><button class="pure-button search-btn wownero"><img src="/static/images/wownero.svg" width=50px></button></a>
+      <br>
+      <a href="/"><button class="pure-button search-btn button-warning">Clear</button></a>
+    </div>
   </div>
 
 </div>
