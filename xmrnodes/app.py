@@ -37,6 +37,7 @@ def index():
 
     nettype = request.args.get("nettype", "mainnet")
     crypto = request.args.get("crypto", "monero")
+    onion = request.args.get("onion", False)
 
     nodes = Node.select().where(
         Node.validated==True
@@ -47,6 +48,9 @@ def index():
     ).order_by(
         Node.datetime_entered.desc()
     )
+    if onion:
+        nodes = nodes.where(Node.is_tor==True)
+        
     paginated = nodes.paginate(page, itp)
     total_pages = nodes.count() / itp
     return render_template(
