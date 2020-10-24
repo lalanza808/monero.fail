@@ -34,7 +34,6 @@
       <thead>
         <tr>
           <th>URL</th>
-          <th>Tor</th>
           <th>Available</th>
           <th>Network</th>
           <th>Height</th>
@@ -44,8 +43,7 @@
       <tbody>
         {% for node in nodes %}
         <tr>
-          <td>{{ node.url }}</td>
-          <td>{{ node.is_tor }}</td>
+          <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="20px">{% endif %}{{ node.url }}</td>
           <td>
             {% if node.available %}
               <div class="icon-check" style="color:green;"></div>

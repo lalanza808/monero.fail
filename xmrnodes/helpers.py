@@ -1,4 +1,17 @@
 from requests import get as r_get
+from xmrnodes import config
+
+
+def make_request(url: str, path="/get_info", data=None):
+    if is_onion(url):
+        proxies = {"http": f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"}
+        timeout = 18
+    else:
+        proxies = None
+        timeout = 6
+    r = r_get(url + path, timeout=timeout, proxies=proxies, json=data)
+    r.raise_for_status()
+    return r
 
 def determine_crypto(url):
     data = {"method": "get_block_header_by_height", "params": {"height": 0}}
@@ -14,8 +27,7 @@ def determine_crypto(url):
         ]
     }
     try:
-        r = r_get(url + "/json_rpc", json=data, timeout=5)
-        r.raise_for_status()
+        r = make_request(url, "/json_rpc", data)
         assert "result" in r.json()
         hash = r.json()["result"]["block_header"]["hash"]
         crypto = "unknown"
@@ -26,3 +38,12 @@ def determine_crypto(url):
         return crypto
     except:
         return "unknown"
+
+def is_onion(url: str):
+    _split = url.split(":")
+    if len(_split) < 2:
+        return False
+    if _split[1].endswith(".onion"):
+        return True
+    else:
+        return False

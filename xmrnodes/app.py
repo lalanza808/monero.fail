@@ -9,7 +9,7 @@ from datetime import datetime
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
-from xmrnodes.helpers import determine_crypto
+from xmrnodes.helpers import determine_crypto, is_onion, make_request
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node
 from xmrnodes import config
@@ -91,8 +91,7 @@ def check():
         now = datetime.utcnow()
         logging.info(f"Attempting to check {node.url}")
         try:
-            r = requests.get(node.url + "/get_info", timeout=5)
-            r.raise_for_status()
+            r = make_request(node.url)
             assert "status" in r.json()
             assert "offline" in r.json()
             assert "height" in r.json()
@@ -115,14 +114,9 @@ def validate():
     nodes = Node.select().where(Node.validated == False)
     for node in nodes:
         now = datetime.utcnow()
-        is_onion = node.url.split(":")[1].endswith(".onion")
         logging.info(f"Attempting to validate {node.url}")
-        if is_onion:
-            logging.info("onion address found")
-            node.is_tor = True
         try:
-            r = requests.get(node.url + "/get_info", timeout=5)
-            r.raise_for_status()
+            r = make_request(node.url)
             assert "height" in r.json()
             assert "nettype" in r.json()
             nettype = r.json()["nettype"]
@@ -135,6 +129,7 @@ def validate():
                 node.last_height = r.json()["height"]
                 node.datetime_checked = now
                 node.crypto = crypto
+                node.is_tor = is_onion(node.url)
                 node.save()
             else:
                 logging.info("unexpected nettype")

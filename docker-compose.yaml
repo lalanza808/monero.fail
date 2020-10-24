@@ -1,0 +1,10 @@
+version: '3'
+services:
+  tor:
+    container_name: tor
+    build:
+      context: .
+      dockerfile: Dockerfile-torsocks
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:9050:9050
