@@ -48,9 +48,9 @@
           <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}{{ node.url }}</td>
           <td>
             {% if node.available %}
-              <div class="icon-check" style="color:green;"></div>
+              <span class="dot glowing-green"></span>
             {% else %}
-              <div class="icon-close" style="color:red;"></div>
+              <span class="dot glowing-red""></span>
             {% endif %}
           </td>
           <td>{{ node.nettype }}</td>
