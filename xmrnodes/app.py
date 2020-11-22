@@ -5,7 +5,7 @@ import re
 import logging
 import click
 from os import makedirs
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
@@ -91,8 +91,16 @@ def add():
                 node.save()
     return redirect("/")
 
+def cleanup_health_checks():
+    diff = datetime.now() - timedelta(hours=2)
+    checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
+    for check in checks:
+        print("Deleting check", check.id)
+        check.delete_instance()
+
 @app.cli.command("check")
 def check():
+    cleanup_health_checks()
     nodes = Node.select().where(Node.validated == True)
     for node in nodes:
         now = datetime.utcnow()
