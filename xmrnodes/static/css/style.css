@@ -61,3 +61,11 @@ input[type="text"] {
 .container2 {
   padding: 4em;
 }
+
+.page-btn {
+  text-align: center;
+}
+
+.current-page-btn {
+  background-color: #b8b8b8;
+}

@@ -27,7 +27,7 @@ app.secret_key = app.config["SECRET_KEY"]
 @app.route("/", methods=["GET", "POST"])
 def index():
     form = SubmitNode()
-    itp = 20
+    itp = 10
     page = request.args.get("page", 1)
     try:
         page = int(page)
@@ -52,7 +52,7 @@ def index():
         nodes = nodes.where(Node.is_tor==True)
 
     paginated = nodes.paginate(page, itp)
-    total_pages = nodes.count() / itp
+    total_pages = int(nodes.count() / itp) + 1
     return render_template(
         "index.html",
         nodes=paginated,

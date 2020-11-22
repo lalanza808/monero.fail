@@ -57,7 +57,7 @@
           <td>{{ node.last_height }}</td>
           <td>{{ node.datetime_checked | humanize }}</td>
           <td>{% for hc in node.healthchecks %}
-            {% if loop.index > loop.length - 11 %}
+            {% if loop.index > loop.length - 6 %}
             <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
             {% endif %}
           {% endfor %}
@@ -66,12 +66,11 @@
       {% endfor %}
       </tbody>
     </table>
-    {% if page > 1 %}
-      <a href="/?page={{ page - 1 }}" class="pure-button btn">Back</a>
-    {% endif %}
-    {% if page < total_pages and total_pages > 0 %}
-      <a href="/?page={{ page + 1 }}" class="pure-button btn">Next</a>
-    {% endif %}
+    <div class="page-btn">
+      {% for p in range(1, total_pages + 1) %}
+        <a href="/?page={{ p }}" class="pure-button btn {% if p == page %}current-page-btn{% endif %}">{{ p }}</a>
+      {% endfor %}
+    </div>
     {% else %}
     <p>No nodes in the database yet...</p>
     {% endif %}
