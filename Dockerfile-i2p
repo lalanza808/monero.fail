@@ -1,0 +1,16 @@
+FROM ubuntu:20.04
+
+RUN apt-get -y update && \
+    apt-get -y install \
+	  wget unzip && \
+    apt-get clean
+
+RUN useradd -m -d /home/i2pz i2pz
+
+USER i2pz
+
+RUN cd ~/ && \
+    wget https://github.com/i2p-zero/i2p-zero/releases/download/v1.18/i2p-zero-linux.v1.18.zip -O i2p-zero.zip && \
+    unzip i2p-zero.zip
+
+ENTRYPOINT ["/home/i2pz/i2p-zero-linux.v1.18/router/bin/tunnel-control.sh", "socks.create", "48080"]

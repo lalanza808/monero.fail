@@ -8,3 +8,11 @@ services:
     restart: unless-stopped
     ports:
       - 127.0.0.1:9050:9050
+  i2p:
+    container_name: i2p
+    build:
+      context: .
+      dockerfile: Dockerfile-i2p
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:4444:4444

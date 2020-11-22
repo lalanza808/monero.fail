@@ -188,6 +188,12 @@ def import_():
                 pass
     logging.info(f"{len(all_nodes)} node urls imported and ready to be validated")
 
+@app.cli.command("i2p")
+def i2p():
+    proxies = {"http": f"socks5h://{config.I2P_HOST}:{config.I2P_PORT}"}
+    r = requests.get("http://vkohxr7ealm23uacawcjpbxi3smas2wajr5ne6sgmmw42ygvjikq.b32.i2p", proxies=proxies)
+    print(r.content)
+
 @app.template_filter("humanize")
 def humanize(d):
     t = arrow.get(d, "UTC")
