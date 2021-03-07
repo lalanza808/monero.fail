@@ -82,7 +82,7 @@ def add():
             flash("This doesn\"t look like a valid URL")
         else:
             _url = urlparse(url)
-            url = f"{_url.scheme}://{_url.netloc}"
+            url = f"{_url.scheme}://{_url.netloc}".lower()
             if Node.select().where(Node.url == url).exists():
                 flash("This node is already in the database.")
             else:
@@ -187,7 +187,7 @@ def import_():
     with open(export_dir, 'r') as f:
         for url in f.readlines():
             try:
-                n = url.rstrip()
+                n = url.rstrip().lower()
                 logging.info(f"Adding {n}")
                 node = Node(url=n)
                 node.save()
