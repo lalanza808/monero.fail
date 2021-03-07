@@ -69,3 +69,13 @@ input[type="text"] {
 .current-page-btn {
   background-color: #b8b8b8;
 }
+
+.xmrnodes {
+  width: 95%;
+  margin: auto;
+  font-size: .83em;
+}
+
+#nodes {
+  padding-top: 1em;
+}

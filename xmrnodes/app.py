@@ -5,6 +5,7 @@ import re
 import logging
 import click
 from os import makedirs
+from random import shuffle
 from datetime import datetime, timedelta
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
@@ -27,18 +28,9 @@ app.secret_key = app.config["SECRET_KEY"]
 @app.route("/", methods=["GET", "POST"])
 def index():
     form = SubmitNode()
-    itp = 10
-    page = request.args.get("page", 1)
-    try:
-        page = int(page)
-    except:
-        flash("Wow, wtf hackerman. Cool it.")
-        page = 1
-
     nettype = request.args.get("nettype", "mainnet")
     crypto = request.args.get("crypto", "monero")
     onion = request.args.get("onion", False)
-
     nodes = Node.select().where(
         Node.validated==True
     ).where(
@@ -51,13 +43,12 @@ def index():
     if onion:
         nodes = nodes.where(Node.is_tor==True)
 
-    paginated = nodes.paginate(page, itp)
-    total_pages = int(nodes.count() / itp) + 1
+    nodes = [n for n in nodes]
+    shuffle(nodes)
+
     return render_template(
         "index.html",
-        nodes=paginated,
-        page=page,
-        total_pages=total_pages,
+        nodes=nodes,
         form=form
     )
 

@@ -29,61 +29,56 @@
 
   <div id="nodes" class="pure-u-1 section">
     <h2 class="center">Find a Node</h2>
-    <br>
-    {% if nodes %}
-    <table class="pure-table pure-table-horizontal pure-table-striped">
-      <thead>
-        <tr>
-          <th>URL</th>
-          <th>Available</th>
-          <th>Network</th>
-          <th>Height</th>
-          <th>Last Checked</th>
-          <th>History</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for node in nodes %}
-        <tr>
-          <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}{{ node.url }}</td>
-          <td>
-            {% if node.available %}
-              <span class="dot glowing-green"></span>
-            {% else %}
-              <span class="dot glowing-red""></span>
-            {% endif %}
-          </td>
-          <td>{{ node.nettype }}</td>
-          <td>{{ node.last_height }}</td>
-          <td>{{ node.datetime_checked | humanize }}</td>
-          <td>{% for hc in node.healthchecks %}
-            {% if loop.index > loop.length - 6 %}
-            <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
-            {% endif %}
-          {% endfor %}
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <div class="page-btn">
-      {% for p in range(1, total_pages + 1) %}
-        <a href="/?page={{ p }}" class="pure-button btn {% if p == page %}current-page-btn{% endif %}">{{ p }}</a>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p>No nodes in the database yet...</p>
-    {% endif %}
-    <br>
     <div class="center" id="filters">
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=mainnet"><button class="pure-button search-btn">Mainnet</button></a>
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=testnet"><button class="pure-button search-btn">Testnet</button></a>
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=stagenet"><button class="pure-button search-btn">Stagenet</button></a>
       {% if 'onion' not in request.args %}<a href="{% if 'nettype' in request.args or 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}onion=true"><button class="pure-button search-btn"><img src="/static/images/tor.svg" width=15px> Onion</button></a>{% endif %}
       <a href="/?crypto=wownero"><button class="pure-button search-btn wownero"><img src="/static/images/wownero.svg" width=50px></button></a>
-      <br>
-      <a href="/"><button class="pure-button search-btn button-warning">Clear</button></a>
+      <a href="/"><button class="pure-button search-btn button-warning" style="border: dashed red;">x Clear</button></a>
     </div>
+    <br>
+    {% if nodes %}
+    <div class="xmrnodes">
+      <table class="pure-table pure-table-horizontal pure-table-striped">
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Available</th>
+            <th>Network</th>
+            <th>Height</th>
+            <th>Last Checked</th>
+            <th>History</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for node in nodes %}
+          <tr>
+            <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}{{ node.url }}</td>
+            <td>
+              {% if node.available %}
+                <span class="dot glowing-green"></span>
+              {% else %}
+                <span class="dot glowing-red""></span>
+              {% endif %}
+            </td>
+            <td>{{ node.nettype }}</td>
+            <td>{{ node.last_height }}</td>
+            <td>{{ node.datetime_checked | humanize }}</td>
+            <td>{% for hc in node.healthchecks %}
+              {% if loop.index > loop.length - 6 %}
+              <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
+              {% endif %}
+            {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p>No nodes in the database yet...</p>
+    {% endif %}
   </div>
 
 </div>
