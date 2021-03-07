@@ -40,6 +40,8 @@
     <br>
     {% if nodes %}
     <div class="xmrnodes">
+      <p class="center">Currently tracking {{ nodes | length }} nodes in the database. Of those, {{ nodes_unhealthy | length }} nodes failed their last check-in.</p>
+      <br>
       <table class="pure-table pure-table-horizontal pure-table-striped">
         <thead>
           <tr>

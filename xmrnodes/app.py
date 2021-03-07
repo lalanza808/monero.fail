@@ -49,6 +49,8 @@ def index():
     return render_template(
         "index.html",
         nodes=nodes,
+        nodes_healthy=[n for n in nodes if n.available],
+        nodes_unhealthy=[n for n in nodes if not n.available],
         form=form
     )
 
