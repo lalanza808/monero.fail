@@ -4,3 +4,4 @@ peewee
 gunicorn
 arrow
 flask_wtf
+git+https://github.com/cdiv1e12/py-levin

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request, redirect
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
-from xmrnodes.helpers import determine_crypto, is_onion, make_request
+from xmrnodes.helpers import determine_crypto, is_onion, make_request, retrieve_peers
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, HealthCheck
 from xmrnodes import config
@@ -120,6 +120,11 @@ def check():
             node.datetime_checked = now
             node.save()
             hc.save()
+
+@app.cli.command("get_peers")
+def get_peers():
+    r = retrieve_peers()
+    print(r)
 
 @app.cli.command("validate")
 def validate():
