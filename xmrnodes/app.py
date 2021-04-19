@@ -54,33 +54,19 @@ def index():
         form=form
     )
 
-@app.route("/nodes.json")
-def nodes_json():
+@app.route("/xmr_nodes.json")
+def xmr_nodes_json():
     nodes = Node.select().where(
         Node.validated==True
+    ).where(
+        Node.nettype=="mainnet"
+    ).where(
+        Node.crypto=="monero"
     )
     nodes = [n for n in nodes]
-    xmr_nodes = [n for n in nodes if n.crypto == "monero"]
-    wow_nodes = [n for n in nodes if n.crypto == "wownero"]
     return jsonify({
-        "monero": {
-            "mainnet": {
-                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "mainnet"],
-                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "mainnet"],
-            },
-            "stagenet": {
-                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "stagenet"],
-                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "stagenet"],
-            },
-            "testnet": {
-                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "testnet"],
-                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "testnet"],
-            }
-        },
-        "wownero": {
-            "healthy": [n.url for n in wow_nodes if n.available],
-            "unhealthy": [n.url for n in wow_nodes if not n.available],
-        }
+        "clear": [n.url for n in nodes if n.is_tor == False],
+        "onion": [n.url for n in nodes if n.is_tor == True]
     })
 
 @app.route("/resources")
