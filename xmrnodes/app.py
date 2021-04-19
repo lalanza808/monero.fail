@@ -7,7 +7,7 @@ import click
 from os import makedirs
 from random import shuffle
 from datetime import datetime, timedelta
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, jsonify
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
@@ -53,6 +53,35 @@ def index():
         nodes_unhealthy=[n for n in nodes if not n.available],
         form=form
     )
+
+@app.route("/nodes.json")
+def nodes_json():
+    nodes = Node.select().where(
+        Node.validated==True
+    )
+    nodes = [n for n in nodes]
+    xmr_nodes = [n for n in nodes if n.crypto == "monero"]
+    wow_nodes = [n for n in nodes if n.crypto == "wownero"]
+    return jsonify({
+        "monero": {
+            "mainnet": {
+                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "mainnet"],
+                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "mainnet"],
+            },
+            "stagenet": {
+                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "stagenet"],
+                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "stagenet"],
+            },
+            "testnet": {
+                "healthy": [n.url for n in xmr_nodes if n.available and n.nettype == "testnet"],
+                "unhealthy": [n.url for n in xmr_nodes if not n.available and n.nettype == "testnet"],
+            }
+        },
+        "wownero": {
+            "healthy": [n.url for n in wow_nodes if n.available],
+            "unhealthy": [n.url for n in wow_nodes if not n.available],
+        }
+    })
 
 @app.route("/resources")
 def resources():
@@ -177,7 +206,7 @@ def export():
 def import_():
     all_nodes = []
     export_dir = f"{config.DATA_DIR}/export.txt"
-    with open(export_dir, 'r') as f:
+    with open(export_dir, "r") as f:
         for url in f.readlines():
             try:
                 n = url.rstrip().lower()
