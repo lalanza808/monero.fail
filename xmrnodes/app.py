@@ -54,14 +54,34 @@ def index():
         form=form
     )
 
-@app.route("/xmr_nodes.json")
-def xmr_nodes_json():
+@app.route("/nodes.json")
+def nodes_json():
+    nodes = Node.select().where(
+        Node.validated==True
+    ).where(
+        Node.nettype=="mainnet"
+    )
+    xmr_nodes = [n for n in nodes if n.crypto == "monero"]
+    wow_nodes = [n for n in nodes if n.crypto == "wownero"]
+    return jsonify({
+        "monero": {
+            "clear": [n.url for n in xmr_nodes if n.is_tor == False],
+            "onion": [n.url for n in xmr_nodes if n.is_tor == True]
+        },
+        "wownero": {
+            "clear": [n.url for n in wow_nodes if n.is_tor == False],
+            "onion": [n.url for n in wow_nodes if n.is_tor == True]
+        }
+    })
+
+@app.route("/wow_nodes.json")
+def wow_nodes_json():
     nodes = Node.select().where(
         Node.validated==True
     ).where(
         Node.nettype=="mainnet"
     ).where(
-        Node.crypto=="monero"
+        Node.crypto=="wownero"
     )
     nodes = [n for n in nodes]
     return jsonify({
