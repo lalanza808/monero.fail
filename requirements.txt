@@ -4,3 +4,4 @@ peewee
 gunicorn
 arrow
 flask_wtf
+pysocks
