@@ -1,18 +1,23 @@
-import arrow
+
 import json
-import requests
 import re
 import logging
-import click
 from os import makedirs
 from random import shuffle
+from socket import gethostbyname_ex
 from datetime import datetime, timedelta
-from flask import Flask, request, redirect
+
+import geoip2.database
+import arrow
+import requests
+import click
+from flask import Flask, request, redirect, jsonify
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
+
 from xmrnodes.helpers import determine_crypto, is_onion, make_request, retrieve_peers
 from xmrnodes.forms import SubmitNode
-from xmrnodes.models import Node, HealthCheck
+from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
 
@@ -52,6 +57,68 @@ def index():
         nodes_healthy=[n for n in nodes if n.available],
         nodes_unhealthy=[n for n in nodes if not n.available],
         form=form
+    )
+
+@app.route("/nodes.json")
+def nodes_json():
+    nodes = Node.select().where(
+        Node.validated==True
+    ).where(
+        Node.nettype=="mainnet"
+    )
+    xmr_nodes = [n for n in nodes if n.crypto == "monero"]
+    wow_nodes = [n for n in nodes if n.crypto == "wownero"]
+    return jsonify({
+        "monero": {
+            "clear": [n.url for n in xmr_nodes if n.is_tor == False],
+            "onion": [n.url for n in xmr_nodes if n.is_tor == True]
+        },
+        "wownero": {
+            "clear": [n.url for n in wow_nodes if n.is_tor == False],
+            "onion": [n.url for n in wow_nodes if n.is_tor == True]
+        }
+    })
+
+@app.route("/wow_nodes.json")
+def wow_nodes_json():
+    nodes = Node.select().where(
+        Node.validated==True
+    ).where(
+        Node.nettype=="mainnet"
+    ).where(
+        Node.crypto=="wownero"
+    )
+    nodes = [n for n in nodes]
+    return jsonify({
+        "clear": [n.url for n in nodes if n.is_tor == False],
+        "onion": [n.url for n in nodes if n.is_tor == True]
+    })
+
+@app.route("/map")
+def map():
+    peers = Peer.select()
+    nodes = list()
+    _nodes = Node.select().where(
+        Node.is_tor == False,
+        Node.crypto == 'monero',
+        Node.validated == True,
+        Node.nettype == 'mainnet'
+    )
+    with geoip2.database.Reader('./data/GeoLite2-City.mmdb') as reader:
+        for node in _nodes:
+            try:
+                _url = urlparse(node.url)
+                ip = gethostbyname_ex(_url.hostname)[2][0]
+                response = reader.city(ip)
+                nodes.append((response.location.longitude, response.location.latitude, _url.hostname, node.datetime_entered))
+            except:
+                pass
+
+    return render_template(
+        "map.html",
+        peers=peers,
+        nodes=nodes,
+        source_node=config.NODE_HOST
     )
 
 @app.route("/resources")
@@ -123,8 +190,56 @@ def check():
 
 @app.cli.command("get_peers")
 def get_peers():
-    r = retrieve_peers()
-    print(r)
+    all_peers = []
+    print(f'[+] Retrieving initial peers from {config.NODE_HOST}:{config.NODE_PORT}')
+    initial_peers = retrieve_peers(config.NODE_HOST, config.NODE_PORT)
+    with geoip2.database.Reader('./data/GeoLite2-City.mmdb') as reader:
+        for peer in initial_peers:
+            if peer not in all_peers:
+                all_peers.append(peer)
+            _url = urlparse(peer)
+            url = f"{_url.scheme}://{_url.netloc}".lower()
+            if not Peer.select().where(Peer.url == peer).exists():
+                response = reader.city(_url.hostname)
+                p = Peer(
+                    url=peer,
+                    country=response.country.name,
+                    city=response.city.name,
+                    postal=response.postal.code,
+                    lat=response.location.latitude,
+                    lon=response.location.longitude,
+                )
+                p.save()
+                print(f'{peer} - saving new peer')
+            else:
+                print(f'{peer} - already seen')
+
+            try:
+                print(f'[+] Retrieving crawled peers from {_url.netloc}')
+                new_peers = retrieve_peers(_url.hostname, _url.port)
+                for peer in new_peers:
+                    all_peers.append(peer)
+                    _url = urlparse(peer)
+                    url = f"{_url.scheme}://{_url.netloc}".lower()
+                    if not Peer.select().where(Peer.url == peer).exists():
+                        response = reader.city(_url.hostname)
+                        p = Peer(
+                            url=peer,
+                            country=response.country.name,
+                            city=response.city.name,
+                            postal=response.postal.code,
+                            lat=response.location.latitude,
+                            lon=response.location.longitude,
+                        )
+                        p.save()
+                        print(f'{peer} - saving new peer')
+                    else:
+                        print(f'{peer} - already seen')
+            except:
+                pass
+
+    print(f'{len(all_peers)} peers found from {config.NODE_HOST}:{config.NODE_PORT}')
+
 
 @app.cli.command("validate")
 def validate():
@@ -182,7 +297,7 @@ def export():
 def import_():
     all_nodes = []
     export_dir = f"{config.DATA_DIR}/export.txt"
-    with open(export_dir, 'r') as f:
+    with open(export_dir, "r") as f:
         for url in f.readlines():
             try:
                 n = url.rstrip().lower()

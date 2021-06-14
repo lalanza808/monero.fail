@@ -54,12 +54,14 @@ def is_onion(url: str):
     else:
         return False
 
-def retrieve_peers():
+def retrieve_peers(host, port):
     try:
+        print(f'[.] Connecting to {host}:{port}')
         sock = socket.socket()
-        sock.connect((config.NODE_HOST, int(config.NODE_PORT))
+        sock.settimeout(5)
+        sock.connect((host, int(port)))
     except:
-        sys.stderr.write("unable to connect to %s:%d\n" % (config.NODE_HOST, int(config.NODE_PORT))
+        sys.stderr.write("unable to connect to %s:%d\n" % (host, int([port])))
         sys.exit()
 
     bucket = Bucket.create_handshake_request()
@@ -84,9 +86,9 @@ def retrieve_peers():
         buckets.append(bucket)
 
         if bucket.command == 1001:
-            peers = bucket.get_peers() or []
+            _peers = bucket.get_peers() or []
 
-            for peer in peers:
+            for peer in _peers:
                 try:
                     peers.append('http://%s:%d' % (peer['ip'].ip, peer['port'].value))
                 except:

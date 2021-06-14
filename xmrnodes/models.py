@@ -1,5 +1,8 @@
-from peewee import *
+from urllib.parse import urlparse
 from datetime import datetime
+
+from peewee import *
+
 from xmrnodes import config
 
 
@@ -22,6 +25,22 @@ class Node(Model):
     class Meta:
         database = db
 
+class Peer(Model):
+    id = AutoField()
+    url = CharField(unique=True)
+    country = CharField(null=True)
+    city = CharField(null=True)
+    postal = IntegerField(null=True)
+    lat = FloatField(null=True)
+    lon = FloatField(null=True)
+    datetime = DateTimeField(default=datetime.utcnow)
+
+    def get_ip(self):
+        return urlparse(self.url).hostname
+
+    class Meta:
+        database = db
+
 class HealthCheck(Model):
     id = AutoField()
     node = ForeignKeyField(Node, backref='healthchecks')
@@ -31,4 +50,4 @@ class HealthCheck(Model):
     class Meta:
         database = db
 
-db.create_tables([Node, HealthCheck])
+db.create_tables([Node, HealthCheck, Peer])
