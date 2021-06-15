@@ -30,7 +30,7 @@
      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" type="text/css">
      <style>
        .map {
-         height: 600px;
+         height: 750px;
          margin: 0;
          padding: 0;
        }
@@ -57,13 +57,8 @@
   {% endif %}
 {% endwith %}
 
-<div id="" class="center">
-  <br>
-  <a href="https://twitter.com/lza_menace" target="_blank">Contact me</a>
-  -
-  <a href="https://github.com/lalanza808/monero.fail" target="_blank">Source Code</a>
-  -
-  <a href="{{ url_for('resources') }}">Resources</a>
+<div class="center">
+  <a href="#footer">See more</a>
 </div>
 
  <!-- Map -->
@@ -79,6 +74,15 @@
   and the nodes already added to the monero.fail database.
   New peers are searched for on a recurring interval throughout the day.
 </p>
+
+<div id="" class="center">
+  <br>
+  <a href="https://twitter.com/lza_menace" target="_blank">Contact me</a>
+  -
+  <a href="https://github.com/lalanza808/monero.fail" target="_blank">Source Code</a>
+  -
+  <a href="{{ url_for('resources') }}">Resources</a>
+</div>
 
 <!-- Footer -->
 <div id="footer" class="center">
