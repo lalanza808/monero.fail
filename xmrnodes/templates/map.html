@@ -33,6 +33,11 @@
        .popover-body {
           min-width: 276px;
         }
+        .center.info {
+          width: 50%;
+          margin: auto;
+          padding: 2em;
+        }
      </style>
      <script src="https://cdn.polyfill.io/v3/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL,TextDecoder"></script>
      <script src="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
@@ -53,36 +58,26 @@
   {% endif %}
 {% endwith %}
 
-<div class="center">
-  <a href="#footer">See more</a>
-</div>
-
- <!-- Map -->
-<h2>View Map</h2>
-<div id="map" class="map"></div>
-<div id="popup" class="popup" title="Welcome to OpenLayers"></div>
-<p>Found Peers (via source node, levin p2p): {{ peers | length }}</p>
-<p>Source Node: {{ source_node }}</p>
-<p>
-  This is not a full representation of the entire Monero network,
-  just a look into the peers being crawled from the source node ({{ source_node }})
-  and the nodes already added to the monero.fail database.
-  New peers are searched for on a recurring interval throughout the day.
-</p>
-
-<div id="" class="center">
+<div class="center info">
+  <p>Peers seen ~24 hours: {{ peers | length }}</p>
+  <p>Source Node: {{ source_node }}</p>
+  <p>
+    This is not a full representation of the entire Monero network,
+    just a look into the peers being crawled from the source node ({{ source_node }}).
+    New peers are searched for on a recurring interval throughout the day.
+    Older peers are shown as more transparent and will be removed if not seen again after 24 hours.
+  </p>
   <br>
+  <a href="/">Go home</a>
+  -
   <a href="https://twitter.com/lza_menace" target="_blank">Contact me</a>
   -
   <a href="https://github.com/lalanza808/monero.fail" target="_blank">Source Code</a>
   -
   <a href="{{ url_for('resources') }}">Resources</a>
 </div>
-
-<!-- Footer -->
-<div id="footer" class="center">
-  <a href="/">Go home</a>
-</div>
+<div id="map" class="map"></div>
+<div id="popup" class="popup" title="Welcome to OpenLayers"></div>
 
 <script>
  // Marker layer
@@ -108,30 +103,40 @@
    })
  });
 
- // Define a circle marker
- var circle = new ol.style.Style({
-      image: new ol.style.Circle({
-          radius: 5,
-          fill: new ol.style.Fill({
-              color: 'rgba(76,76,76,.75)',
-          }),
-          stroke: new ol.style.Stroke({
-              color: 'rgba(53,53,53,.75)',
-              width: 1
-          })
-      })
-  });
-
  {% for peer in peers %}
+
+   {% if peer.datetime | hours_elapsed > 24 %}
+      {% set fill_color = 'rgba(238,111,45,.2)' %}
+   {% elif peer.datetime | hours_elapsed > 16 %}
+      {% set fill_color = 'rgba(238,111,45,.4)' %}
+   {% elif peer.datetime | hours_elapsed > 8 %}
+      {% set fill_color = 'rgba(238,111,45,.6)' %}
+   {% elif peer.datetime | hours_elapsed > 4 %}
+      {% set fill_color = 'rgba(238,111,45,.8)' %}
+   {% else %}
+      {% set fill_color = 'rgba(238,111,45,1)' %}
+   {% endif %}
    var feature = new ol.Feature(
        new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
    );
    feature.description = [
      'Peer {{ peer.url }}',
-     'Last seen {{ peer.datetime }}'
+     'Last seen {{ peer.datetime | humanize }}'
    ];
-   feature.setStyle(circle);
-   markerLayer.getSource().addFeature(feature);
+   feature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 6,
+            fill: new ol.style.Fill({
+                color: '{{ fill_color }}',
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#fff',
+                width: 1
+            })
+        })
+    })
+  );
+  markerLayer.getSource().addFeature(feature);
  {% endfor %}
 
   // Setup popup

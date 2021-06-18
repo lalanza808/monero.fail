@@ -1,4 +1,3 @@
-
 import json
 import re
 import logging
@@ -173,7 +172,8 @@ def check():
 @app.cli.command("get_peers")
 def get_peers():
     all_peers = []
-    print(f'[+] Retrieving initial peers from {config.NODE_HOST}:{config.NODE_PORT}')
+    print('[+] Preparing to crawl Monero p2p network')
+    print(f'[.] Retrieving initial peers from {config.NODE_HOST}:{config.NODE_PORT}')
     initial_peers = retrieve_peers(config.NODE_HOST, config.NODE_PORT)
     with geoip2.database.Reader('./data/GeoLite2-City.mmdb') as reader:
         for peer in initial_peers:
@@ -194,13 +194,16 @@ def get_peers():
                 p.save()
                 print(f'{peer} - saving new peer')
             else:
-                print(f'{peer} - already seen')
+                p = Peer.select().where(Peer.url == peer).first()
+                p.datetime = datetime.now()
+                p.save()
 
             try:
-                print(f'[+] Retrieving crawled peers from {_url.netloc}')
+                print(f'[.] Retrieving crawled peers from {_url.netloc}')
                 new_peers = retrieve_peers(_url.hostname, _url.port)
                 for peer in new_peers:
-                    all_peers.append(peer)
+                    if peer not in all_peers:
+                        all_peers.append(peer)
                     _url = urlparse(peer)
                     url = f"{_url.scheme}://{_url.netloc}".lower()
                     if not Peer.select().where(Peer.url == peer).exists():
@@ -216,12 +219,19 @@ def get_peers():
                         p.save()
                         print(f'{peer} - saving new peer')
                     else:
-                        print(f'{peer} - already seen')
+                        p = Peer.select().where(Peer.url == peer).first()
+                        p.datetime = datetime.now()
+                        p.save()
             except:
                 pass
 
-    print(f'{len(all_peers)} peers found from {config.NODE_HOST}:{config.NODE_PORT}')
-    rw_cache('map_peers', all_peers)
+    print(f'[+] Found {len(all_peers)} peers from {config.NODE_HOST}:{config.NODE_PORT}')
+    print('[+] Deleting old Monero p2p peers')
+    for p in Peer.select():
+        if p.hours_elapsed() > 24:
+            print(f'[.] Deleting {p.url}')
+            p.delete_instance()
+    rw_cache('map_peers', list(Peer.select().execute()))
 
 
 @app.cli.command("validate")
@@ -296,6 +306,12 @@ def import_():
 def humanize(d):
     t = arrow.get(d, "UTC")
     return t.humanize()
+
+@app.template_filter("hours_elapsed")
+def hours_elapsed(d):
+    now = datetime.utcnow()
+    diff = now - d
+    return diff.total_seconds() / 60 / 60
 
 if __name__ == "__main__":
     app.run()
