@@ -1,6 +1,7 @@
 setup:
 	python3 -m venv .venv
 	.venv/bin/pip install -r requirements.txt
+	wget https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb -P data
 
 up:
 	docker-compose up -d
