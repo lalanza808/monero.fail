@@ -15,7 +15,8 @@ from flask import Flask, request, redirect, jsonify
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import determine_crypto, is_onion, make_request, retrieve_peers
+from xmrnodes.helpers import determine_crypto, is_onion, make_request
+from xmrnodes.helpers import retrieve_peers, rw_cache
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -96,28 +97,9 @@ def wow_nodes_json():
 
 @app.route("/map")
 def map():
-    peers = Peer.select()
-    nodes = list()
-    _nodes = Node.select().where(
-        Node.is_tor == False,
-        Node.crypto == 'monero',
-        Node.validated == True,
-        Node.nettype == 'mainnet'
-    )
-    with geoip2.database.Reader('./data/GeoLite2-City.mmdb') as reader:
-        for node in _nodes:
-            try:
-                _url = urlparse(node.url)
-                ip = gethostbyname_ex(_url.hostname)[2][0]
-                response = reader.city(ip)
-                nodes.append((response.location.longitude, response.location.latitude, _url.hostname, node.datetime_entered))
-            except:
-                pass
-
     return render_template(
         "map.html",
-        peers=peers,
-        nodes=nodes,
+        peers=rw_cache('map_peers'),
         source_node=config.NODE_HOST
     )
 
@@ -239,6 +221,7 @@ def get_peers():
                 pass
 
     print(f'{len(all_peers)} peers found from {config.NODE_HOST}:{config.NODE_PORT}')
+    rw_cache('map_peers', all_peers)
 
 
 @app.cli.command("validate")
