@@ -16,6 +16,9 @@ def make_request(url: str, path="/get_info", data=None):
     if is_onion(url):
         proxies = {"http": f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"}
         timeout = 18
+    elif is_b32(url):
+        proxies = {"http": f"socks5h://{config.I2P_HOST}:{config.I2P_PORT}"}
+        timeout = 18
     else:
         proxies = None
         timeout = 6
@@ -58,6 +61,15 @@ def is_onion(url: str):
     else:
         return False
 
+def is_b32(url: str):
+    _split = url.split(":")
+    if len(_split) < 2:
+        return False
+    if _split[1].endswith(".i2p"):
+        return True
+    else:
+        return False
+        
 # Use hacky filesystem cache since i dont feel like shipping redis
 def rw_cache(key_name, data=None):
     pickle_file = path.join(config.DATA_DIR, f'{key_name}.pkl')

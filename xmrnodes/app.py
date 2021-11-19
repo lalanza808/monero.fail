@@ -14,7 +14,7 @@ from flask import Flask, request, redirect, jsonify
 from flask import render_template, flash, url_for
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import determine_crypto, is_onion, make_request
+from xmrnodes.helpers import determine_crypto, is_onion, is_b32, make_request
 from xmrnodes.helpers import retrieve_peers, rw_cache
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, HealthCheck, Peer
@@ -36,6 +36,7 @@ def index():
     nettype = request.args.get("nettype", "mainnet")
     crypto = request.args.get("crypto", "monero")
     onion = request.args.get("onion", False)
+    i2p = request.args.get("i2p", False)
     nodes = Node.select().where(
         Node.validated==True
     ).where(
@@ -47,6 +48,8 @@ def index():
     )
     if onion:
         nodes = nodes.where(Node.is_tor==True)
+    if i2p:
+        nodes = nodes.where(Node.is_i2p==True)
 
     nodes = [n for n in nodes]
     shuffle(nodes)
@@ -255,6 +258,7 @@ def validate():
                 node.datetime_checked = now
                 node.crypto = crypto
                 node.is_tor = is_onion(node.url)
+                node.is_i2p = is_b32(node.url)
                 node.save()
             else:
                 logging.info("unexpected nettype")
@@ -272,6 +276,8 @@ def validate():
             node.delete_instance()
         except Exception as e:
             logging.info("failed for reasons unknown")
+            if app.debug:
+                logging.info(e)
             node.delete_instance()
 
 @app.cli.command("export")

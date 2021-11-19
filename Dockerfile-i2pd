@@ -1,0 +1,15 @@
+FROM ubuntu:20.04
+
+RUN apt-get update && apt-get install i2pd -y
+
+RUN mkdir -p /run/i2pd \
+  && chown -R i2pd:i2pd /run/i2pd \
+  && chmod 700 -R /run/i2pd
+
+USER i2pd
+
+EXPOSE 4447
+EXPOSE 11744
+EXPOSE 4444
+
+ENTRYPOINT ["i2pd", "--socksproxy.address=0.0.0.0", "--httpproxy.address=0.0.0.0"]
