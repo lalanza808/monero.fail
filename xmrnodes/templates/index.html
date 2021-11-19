@@ -48,6 +48,7 @@
             <th>URL</th>
             <th>Available</th>
             <th>Network</th>
+            <th>Date Added</th>
             <th>Height</th>
             <th>Last Checked</th>
             <th>History</th>
@@ -65,6 +66,7 @@
               {% endif %}
             </td>
             <td>{{ node.nettype }}</td>
+            <td>{{ node.datetime_entered.strftime('%Y-%m-%d %H:%M') }} UTC <br/>({{ node.datetime_entered | humanize }})</td>
             <td>{{ node.last_height }}</td>
             <td>{{ node.datetime_checked | humanize }}</td>
             <td>{% for hc in node.healthchecks %}
