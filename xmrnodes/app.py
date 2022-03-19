@@ -12,7 +12,7 @@ import requests
 import click
 from flask import Flask, request, redirect, jsonify
 from flask import render_template, flash, url_for
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
 from xmrnodes.helpers import retrieve_peers, rw_cache
@@ -36,13 +36,20 @@ def index():
     nettype = request.args.get("nettype", "mainnet")
     crypto = request.args.get("crypto", "monero")
     onion = request.args.get("onion", False)
+    show_all = "true" == request.args.get("all", "false")
     nodes = Node.select().where(
-        Node.validated==True
-    ).where(
-        Node.nettype==nettype
-    ).where(
-        Node.crypto==crypto
-    ).order_by(
+        Node.validated == True,
+        Node.nettype == nettype,
+        Node.crypto == crypto
+    )
+
+    nodes_all = nodes.count()
+    nodes_unhealthy = nodes.where(Node.available == False).count()
+
+    if not show_all:
+        nodes = nodes.where(Node.available == True)
+
+    nodes = nodes.order_by(
         Node.datetime_entered.desc()
     )
     if onion:
@@ -54,8 +61,10 @@ def index():
     return render_template(
         "index.html",
         nodes=nodes,
-        nodes_healthy=[n for n in nodes if n.available],
-        nodes_unhealthy=[n for n in nodes if not n.available],
+        nodes_all=nodes_all,
+        nodes_unhealthy=nodes_unhealthy,
+        nettype=nettype,
+        crypto=crypto,
         form=form
     )
 
@@ -312,6 +321,12 @@ def hours_elapsed(d):
     now = datetime.utcnow()
     diff = now - d
     return diff.total_seconds() / 60 / 60
+
+@app.template_filter("pop_arg")
+def trim_arg(all_args, arg_to_trim):
+    d = all_args.to_dict()
+    d.pop(arg_to_trim)
+    return urlencode(d)
 
 if __name__ == "__main__":
     app.run()

@@ -40,7 +40,16 @@
     <br>
     {% if nodes %}
     <div class="xmrnodes">
-      <p class="center">Currently tracking {{ nodes | length }} nodes in the database. Of those, {{ nodes_unhealthy | length }} nodes failed their last check-in.</p>
+      <p class="center">
+        Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database. Of those, {{ nodes_unhealthy }} nodes failed their last check-in.
+      </p>
+      <p class="center">Showing {{ nodes | length }} nodes.
+        {% if 'all' not in request.args %}
+        <a href="{% if request.args %}{{ request.url }}&{% else %}?{% endif %}all=true">Show All</a>
+        {% else %}
+        <a href="{{ request.path }}?{{ request.args | pop_arg('all') }}">Show Active</a>
+        {% endif %}
+      </p>
       <br>
       <table class="pure-table pure-table-horizontal pure-table-striped">
         <thead>
