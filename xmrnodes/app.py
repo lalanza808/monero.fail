@@ -133,7 +133,7 @@ def add():
     return redirect("/")
 
 def cleanup_health_checks():
-    diff = datetime.now() - timedelta(hours=2)
+    diff = datetime.now() - timedelta(hours=24)
     checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
     for check in checks:
         print("Deleting check", check.id)
