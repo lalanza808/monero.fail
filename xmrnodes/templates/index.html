@@ -33,6 +33,7 @@
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=mainnet"><button class="pure-button search-btn">Mainnet</button></a>
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=testnet"><button class="pure-button search-btn">Testnet</button></a>
       <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=stagenet"><button class="pure-button search-btn">Stagenet</button></a>
+      <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}web_compatible=true"><button class="pure-button search-btn">Web</button></a>
       {% if 'onion' not in request.args %}<a href="{% if 'nettype' in request.args or 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}onion=true"><button class="pure-button search-btn"><img src="/static/images/tor.svg" width=15px> Onion</button></a>{% endif %}
       <a href="/?crypto=wownero"><button class="pure-button search-btn wownero"><img src="/static/images/wownero.svg" width=50px></button></a>
       <a href="/"><button class="pure-button search-btn button-warning" style="border: dashed red;">x Clear</button></a>
@@ -56,6 +57,7 @@
           <tr>
             <th>URL</th>
             <th>Available</th>
+            <th>Web<br/>Compatible</th>
             <th>Network</th>
             <th>Date Added</th>
             <th>Height</th>
@@ -72,6 +74,13 @@
                 <span class="dot glowing-green"></span>
               {% else %}
                 <span class="dot glowing-red""></span>
+              {% endif %}
+            </td>
+            <td>
+              {% if node.web_compatible %}
+              <img src="/static/images/success.svg" class="filter-green" width=16px>
+              {% else %}
+              <img src="/static/images/error.svg" class="filter-red" width=16px>
               {% endif %}
             </td>
             <td>{{ node.nettype }}</td>

@@ -37,11 +37,16 @@ def index():
     crypto = request.args.get("crypto", "monero")
     onion = request.args.get("onion", False)
     show_all = "true" == request.args.get("all", "false")
+    web_compatible = request.args.get("web_compatible", False)
+
     nodes = Node.select().where(
         Node.validated == True,
         Node.nettype == nettype,
         Node.crypto == crypto
     )
+
+    if web_compatible:
+        nodes = nodes.where(Node.web_compatible == True)
 
     nodes_all = nodes.count()
     nodes_unhealthy = nodes.where(Node.available == False).count()
@@ -53,7 +58,7 @@ def index():
         Node.datetime_entered.desc()
     )
     if onion:
-        nodes = nodes.where(Node.is_tor==True)
+        nodes = nodes.where(Node.is_tor == True)
 
     nodes = [n for n in nodes]
     shuffle(nodes)
@@ -65,7 +70,8 @@ def index():
         nodes_unhealthy=nodes_unhealthy,
         nettype=nettype,
         crypto=crypto,
-        form=form
+        form=form,
+        web_compatible=web_compatible
     )
 
 @app.route("/nodes.json")
@@ -80,7 +86,8 @@ def nodes_json():
     return jsonify({
         "monero": {
             "clear": [n.url for n in xmr_nodes if n.is_tor == False],
-            "onion": [n.url for n in xmr_nodes if n.is_tor == True]
+            "onion": [n.url for n in xmr_nodes if n.is_tor == True],
+            "web_compatible": [n.url for n in xmr_nodes if n.web_compatible == True],
         },
         "wownero": {
             "clear": [n.url for n in wow_nodes if n.is_tor == False],
@@ -161,9 +168,12 @@ def check():
             assert "status" in r.json()
             assert "offline" in r.json()
             assert "height" in r.json()
+            has_cors = 'Access-Control-Allow-Origin' in r.headers
+            is_ssl = node.url.startswith('https://')
             if r.json()["status"] == "OK":
                 logging.info("success")
                 node.available = True
+                node.web_compatible = has_cors and is_ssl
                 node.last_height = r.json()["height"]
                 hc.health = True
             else:
@@ -253,6 +263,8 @@ def validate():
             r = make_request(node.url)
             assert "height" in r.json()
             assert "nettype" in r.json()
+            has_cors = 'Access-Control-Allow-Origin' in r.headers
+            is_ssl = node.url.startswith('https://')
             nettype = r.json()["nettype"]
             crypto = determine_crypto(node.url)
             logging.info("success")
@@ -260,6 +272,7 @@ def validate():
                 node.nettype = nettype
                 node.available = True
                 node.validated = True
+                node.web_compatible = has_cors and is_ssl
                 node.last_height = r.json()["height"]
                 node.datetime_checked = now
                 node.crypto = crypto

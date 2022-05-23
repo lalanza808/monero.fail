@@ -13,13 +13,14 @@ from xmrnodes import config
 
 
 def make_request(url: str, path="/get_info", data=None):
+    headers = {"Origin": "https://monero.fail"}
     if is_onion(url):
         proxies = {"http": f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"}
         timeout = 18
     else:
         proxies = None
         timeout = 6
-    r = r_get(url + path, timeout=timeout, proxies=proxies, json=data)
+    r = r_get(url + path, timeout=timeout, proxies=proxies, json=data, headers=headers)
     r.raise_for_status()
     return r
 

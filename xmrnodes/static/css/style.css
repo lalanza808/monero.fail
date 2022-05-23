@@ -79,3 +79,11 @@ input[type="text"] {
 #nodes {
   padding-top: 1em;
 }
+
+.filter-green {
+  filter: invert(58%) sepia(20%) saturate(5505%) hue-rotate(67deg) brightness(101%) contrast(90%);
+}
+
+.filter-red {
+  filter: invert(16%) sepia(59%) saturate(5380%) hue-rotate(333deg) brightness(79%) contrast(101%);
+}

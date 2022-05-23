@@ -14,6 +14,7 @@ class Node(Model):
     is_tor = BooleanField(default=False)
     available = BooleanField(default=False)
     validated = BooleanField(default=False)
+    web_compatible = BooleanField(default=False)
     nettype = CharField(null=True)
     last_height = IntegerField(null=True)
     crypto = CharField(null=True)
