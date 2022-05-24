@@ -16,7 +16,7 @@ def make_request(url: str, path="/get_info", data=None):
     headers = {"Origin": "https://monero.fail"}
     if is_onion(url):
         _p = f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"
-        proxies = {"http": p, "https": p}
+        proxies = {"http": _p, "https": _p}
         timeout = 30
     else:
         proxies = None
