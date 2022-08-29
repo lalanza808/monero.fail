@@ -15,7 +15,7 @@ from flask import render_template, flash, url_for
 from urllib.parse import urlparse, urlencode
 
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
-from xmrnodes.helpers import retrieve_peers, rw_cache
+from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -29,6 +29,7 @@ logging.basicConfig(
 app = Flask(__name__)
 app.config.from_envvar("FLASK_SECRETS")
 app.secret_key = app.config["SECRET_KEY"]
+HEALTHY_BLOCK_DIFF = 100 # idc to config this. hardcode is fine.
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -38,6 +39,8 @@ def index():
     onion = request.args.get("onion", False)
     show_all = "true" == request.args.get("all", "false")
     web_compatible = request.args.get("web_compatible", False)
+    highest_block = get_highest_block(nettype, crypto)
+    healthy_block = highest_block - HEALTHY_BLOCK_DIFF
 
     nodes = Node.select().where(
         Node.validated == True,
@@ -49,10 +52,15 @@ def index():
         nodes = nodes.where(Node.web_compatible == True)
 
     nodes_all = nodes.count()
-    nodes_unhealthy = nodes.where(Node.available == False).count()
+    nodes_unhealthy = nodes.where(
+        (Node.available == False) | (Node.last_height < healthy_block)
+    ).count()
 
     if not show_all:
-        nodes = nodes.where(Node.available == True)
+        nodes = nodes.where(
+            Node.available == True,
+            Node.last_height > healthy_block
+        )
 
     nodes = nodes.order_by(
         Node.datetime_entered.desc()
@@ -171,11 +179,17 @@ def check():
             has_cors = 'Access-Control-Allow-Origin' in r.headers
             is_ssl = node.url.startswith('https://')
             if r.json()["status"] == "OK":
-                logging.info("success")
-                node.available = True
                 node.web_compatible = has_cors and is_ssl
                 node.last_height = r.json()["height"]
                 hc.health = True
+                highest_block = get_highest_block(node.nettype, node.crypto)
+                healthy_block = highest_block - HEALTHY_BLOCK_DIFF
+                if r.json()["height"] < healthy_block:
+                    node.available = False
+                    logging.info("unhealthy")
+                else:
+                    node.available = True
+                    logging.info("success")
             else:
                 raise
         except:
