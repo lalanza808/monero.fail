@@ -42,7 +42,9 @@
     {% if nodes %}
     <div class="xmrnodes">
       <p class="center">
-        Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database. Of those, {{ nodes_unhealthy }} nodes failed their last check-in.
+        Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
+        <br>
+        Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 100 blocks away from highest reported block).
       </p>
       <p class="center">Showing {{ nodes | length }} nodes.
         {% if 'all' not in request.args %}

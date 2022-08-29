@@ -9,6 +9,7 @@ from levin.bucket import Bucket
 from levin.ctypes import *
 from levin.constants import LEVIN_SIGNATURE
 
+from xmrnodes.models import Node
 from xmrnodes import config
 
 
@@ -119,3 +120,11 @@ def retrieve_peers(host, port):
         return peers
     else:
         return None
+
+def get_highest_block(nettype, crypto):
+    highest = Node.select().where(
+        Node.validated == True,
+        Node.nettype == nettype,
+        Node.crypto == crypto
+    ).order_by(Node.last_height.desc()).limit(1).first()
+    return highest.last_height
