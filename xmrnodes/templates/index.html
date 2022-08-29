@@ -2,6 +2,7 @@
 
 {% block content %}
 
+
 <div id="index" class="container">
 
   <div id="addnode" class="pure-g center section">
@@ -62,23 +63,24 @@
         {% endif %}
       </p>
       <br>
-      <table class="pure-table pure-table-horizontal pure-table-striped">
+      <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">
         <thead>
           <tr>
-            <th>URL</th>
-            <th>Available</th>
-            <th>Web<br/>Compatible</th>
-            <th>Network</th>
-            <th>Date Added</th>
-            <th>Height</th>
-            <th>Last Checked</th>
-            <th>History</th>
+            <th class="js-sort-string">URL</th>
+            <th class="js-sort-number">Height</th>
+            <th class="js-sort-none">Available</th>
+            <th class="js-sort-none">Web<br/>Compatible</th>
+            <th class="js-sort-none">Network</th>
+            <th class="js-sort-none">Date Added</th>
+            <th class="js-sort-none">Last Checked</th>
+            <th class="js-sort-none">History</th>
           </tr>
         </thead>
         <tbody>
           {% for node in nodes %}
-          <tr>
+          <tr class="js-sort-table">
             <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}{{ node.url }}</td>
+            <td>{{ node.last_height }}</td>
             <td>
               {% if node.available %}
                 <span class="dot glowing-green"></span>
@@ -94,8 +96,7 @@
               {% endif %}
             </td>
             <td>{{ node.nettype }}</td>
-            <td>{{ node.datetime_entered.strftime('%Y-%m-%d %H:%M') }} UTC <br/>({{ node.datetime_entered | humanize }})</td>
-            <td>{{ node.last_height }}</td>
+            <td>{{ node.datetime_entered | humanize }}</td>
             <td>{{ node.datetime_checked | humanize }}</td>
             <td>{% for hc in node.healthchecks %}
               {% if loop.index > loop.length - 6 %}
@@ -114,5 +115,7 @@
   </div>
 
 </div>
+
+<script src="/static/js/sort-table.min.js"></script>
 
 {% endblock %}
