@@ -23,6 +23,14 @@ class Node(Model):
     datetime_failed = DateTimeField(default=None, null=True)
     fail_reason = CharField(null=True)
 
+    def get_failed_checks(self):
+        hcs = HealthCheck.select().where(HealthCheck.node == self, HealthCheck.health == False)
+        return hcs
+
+    def get_all_checks(self):
+        hcs = HealthCheck.select().where(HealthCheck.node == self)
+        return hcs
+
     class Meta:
         database = db
 
