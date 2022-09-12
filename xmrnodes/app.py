@@ -201,6 +201,11 @@ def check():
             node.datetime_checked = now
             node.save()
             hc.save()
+        if node.get_failed_checks().count() == node.get_all_checks().count() and node.get_all_checks().count() > 0:
+            print('this node fails all of its health checks - deleting it!')
+            for _hc in node.get_all_checks():
+                _hc.delete_instance()
+            node.delete_instance()
 
 @app.cli.command("get_peers")
 def get_peers():
