@@ -1,10 +1,12 @@
 import sys
 import socket
 import pickle
+from time import sleep
 from os import path
 
+import zmq
 from requests import get as r_get
-from levin.section import Section
+from urllib.parse import urlparse
 from levin.bucket import Bucket
 from levin.ctypes import *
 from levin.constants import LEVIN_SIGNATURE
@@ -12,6 +14,29 @@ from levin.constants import LEVIN_SIGNATURE
 from xmrnodes.models import Node
 from xmrnodes import config
 
+
+def check_zmq(url: str):
+    # print(url.split('://'))
+    node_socket = urlparse(url).netloc
+    node_url = node_socket.split(':')[0]
+    port = 18084
+    tcp_node = f'tcp://{node_url}:{port}'
+    print('Checking ZMQ for node {}'.format(tcp_node))
+    try:
+        ctx = zmq.Context()
+        subscriber = ctx.socket(zmq.SUB)
+        subscriber.setsockopt_string(zmq.SUBSCRIBE, '')
+        subscriber.setsockopt(zmq.CONFLATE, 1)
+        subscriber.connect(tcp_node)
+        # data = subscriber.recv()
+        count = 0
+        while count < 5:
+            data = subscriber.recv_multipart()
+            count += 1
+            print('success: {}'.format(data))
+        ctx.term()
+    except Exception as e:
+        print(e)
 
 def make_request(url: str, path="/get_info", data=None):
     headers = {"Origin": "https://monero.fail"}

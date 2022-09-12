@@ -1,21 +1,18 @@
 import json
 import re
 import logging
-from os import makedirs
 from random import shuffle
-from socket import gethostbyname_ex
 from datetime import datetime, timedelta
 
 import geoip2.database
 import arrow
 import requests
-import click
 from flask import Flask, request, redirect, jsonify
-from flask import render_template, flash, url_for
+from flask import render_template, flash
 from urllib.parse import urlparse, urlencode
 
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
-from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block
+from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block, check_zmq
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -162,6 +159,13 @@ def cleanup_health_checks():
     for check in checks:
         print("Deleting check", check.id)
         check.delete_instance()
+
+@app.cli.command("zmq")
+def get_zmq():
+    # nodes = Node.select().where(Node.validated == True)
+    # for node in nodes:
+    #     check_zmq(node.url)
+    check_zmq('http://monero.10z.com.ar:18089')
 
 @app.cli.command("check")
 def check():
