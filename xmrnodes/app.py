@@ -1,17 +1,13 @@
-import json
 import re
 import logging
-from os import makedirs
 from random import shuffle
-from socket import gethostbyname_ex
 from datetime import datetime, timedelta
 
 import geoip2.database
 import arrow
 import requests
-import click
 from flask import Flask, request, redirect, jsonify
-from flask import render_template, flash, url_for
+from flask import render_template, flash
 from urllib.parse import urlparse, urlencode
 
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
@@ -318,14 +314,18 @@ def validate():
 @app.cli.command("export")
 def export():
     all_nodes = []
+    ts = int(arrow.get().timestamp())
     export_dir = f"{config.DATA_DIR}/export.txt"
+    export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
     nodes = Node.select().where(Node.validated == True)
     for node in nodes:
         logging.info(f"Adding {node.url}")
         all_nodes.append(node.url)
     with open(export_dir, "w") as f:
         f.write("\n".join(all_nodes))
-    logging.info(f"{nodes.count()} nodes written to {export_dir}")
+    with open(export_dir_stamped, "w") as f:
+        f.write("\n".join(all_nodes))
+    logging.info(f"{nodes.count()} nodes written to {export_dir} and {export_dir_stamped}")
 
 @app.cli.command("import")
 def import_():
