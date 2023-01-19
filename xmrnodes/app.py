@@ -30,11 +30,11 @@ HEALTHY_BLOCK_DIFF = 500 # idc to config this. hardcode is fine.
 @app.route("/", methods=["GET", "POST"])
 def index():
     form = SubmitNode()
-    nettype = request.args.get("nettype", "mainnet")
-    crypto = request.args.get("crypto", "monero")
+    nettype = request.args.get("network", "mainnet")
+    crypto = request.args.get("chain", "monero")
     onion = request.args.get("onion", False)
     show_all = "true" == request.args.get("all", "false")
-    web_compatible = request.args.get("web_compatible", False)
+    web_compatible = request.args.get("cors", False)
     highest_block = get_highest_block(nettype, crypto)
     healthy_block = highest_block - HEALTHY_BLOCK_DIFF
 
