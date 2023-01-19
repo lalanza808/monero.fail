@@ -25,7 +25,7 @@ logging.basicConfig(
 app = Flask(__name__)
 app.config.from_envvar("FLASK_SECRETS")
 app.secret_key = app.config["SECRET_KEY"]
-HEALTHY_BLOCK_DIFF = 100 # idc to config this. hardcode is fine.
+HEALTHY_BLOCK_DIFF = 500 # idc to config this. hardcode is fine.
 
 @app.route("/", methods=["GET", "POST"])
 def index():
