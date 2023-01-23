@@ -314,7 +314,7 @@ def validate():
 @app.cli.command("export")
 def export():
     all_nodes = []
-    ts = int(arrow.get().timestamp())
+    ts = int(arrow.get().timestamp)
     export_dir = f"{config.DATA_DIR}/export.txt"
     export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
     nodes = Node.select().where(Node.validated == True)

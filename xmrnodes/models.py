@@ -2,11 +2,12 @@ from urllib.parse import urlparse
 from datetime import datetime
 
 from peewee import *
+from playhouse.sqliteq import SqliteQueueDatabase
 
 from xmrnodes import config
 
 
-db = SqliteDatabase(f"{config.DATA_DIR}/sqlite.db")
+db = SqliteQueueDatabase(f"{config.DATA_DIR}/sqlite.db")
 
 class Node(Model):
     id = AutoField()
