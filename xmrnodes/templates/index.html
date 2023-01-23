@@ -67,14 +67,6 @@
         <span>
           <a href="/"><input type="button" value="Reset" class="pure-button pure-grey"></a>
         </span>
-        <!--
-        <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=mainnet"><button class="pure-button search-btn">Mainnet</button></a>
-        <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=testnet"><button class="pure-button search-btn">Testnet</button></a>
-        <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}nettype=stagenet"><button class="pure-button search-btn">Stagenet</button></a>
-        <a href="{% if 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}web_compatible=true"><button class="pure-button search-btn">Web</button></a>
-        {% if 'onion' not in request.args %}<a href="{% if 'nettype' in request.args or 'crypto' in request.args %}{{ request.url }}&{% else %}/?{% endif %}onion=true"><button class="pure-button search-btn"><img src="/static/images/tor.svg" width=15px> Onion</button></a>{% endif %}
-        <a href="/?crypto=wownero"><button class="pure-button search-btn wownero"><img src="/static/images/wownero.svg" width=50px></button></a>
-        -->
       </form>
     </div>
     <br>
@@ -148,7 +140,7 @@
       </table>
     </div>
     {% else %}
-      <p>No nodes in the database yet...</p>
+      <p class="center">No nodes in the database yet...</p>
     {% endif %}
   </div>
 
