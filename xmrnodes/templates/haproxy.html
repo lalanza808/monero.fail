@@ -1,0 +1,18 @@
+defaults
+  mode http
+  timeout client 10s
+  timeout connect 5s
+  timeout server 10s 
+  timeout http-request 10s
+
+frontend frontend
+  bind :8080
+  default_backend nodes
+
+backend nodes
+    balance roundrobin
+    option httpchk GET /get_info
+    {% for node in nodes -%}
+      server backend-{{ node.id }} {{ node.get_netloc() }}
+    {% endfor %}
+

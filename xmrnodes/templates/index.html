@@ -69,7 +69,6 @@
         </span>
       </form>
     </div>
-    <br>
     {% if nodes %}
     <div class="xmrnodes">
       <p class="center">
@@ -81,6 +80,7 @@
         </strong>
         <br><br>
         {% endif %}
+        <a href="{{ url_for('haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).

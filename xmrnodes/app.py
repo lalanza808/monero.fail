@@ -7,7 +7,7 @@ import geoip2.database
 import arrow
 import requests
 from flask import Flask, request, redirect, jsonify
-from flask import render_template, flash
+from flask import render_template, flash, Response
 from urllib.parse import urlparse, urlencode
 
 from xmrnodes.helpers import determine_crypto, is_onion, make_request
@@ -98,6 +98,25 @@ def nodes_json():
             "onion": [n.url for n in wow_nodes if n.is_tor == True]
         }
     })
+
+@app.route("/haproxy.cfg")
+def haproxy():
+    crypto = request.args.get('chain') or 'monero'
+    nettype = request.args.get('network') or 'mainnet'
+    cors = request.args.get('cors') or False
+    tor = request.args.get('onion') or False
+    nodes = Node.select().where(
+        Node.validated == True,
+        Node.nettype == nettype,
+        Node.crypto == crypto,
+        Node.is_tor == tor,
+        Node.web_compatible == cors
+    )
+    tpl = render_template("haproxy.html", nodes=nodes)
+    print(tpl)
+    res = Response(tpl)
+    res.headers['Content-Disposition'] = f'attachment; filename="haproxy-{crypto}-{nettype}-cors_{cors}-tor_{tor}.cfg"'
+    return res
 
 @app.route("/wow_nodes.json")
 def wow_nodes_json():
@@ -314,7 +333,7 @@ def validate():
 @app.cli.command("export")
 def export():
     all_nodes = []
-    ts = int(arrow.get().timestamp)
+    ts = int(arrow.get().timestamp())
     export_dir = f"{config.DATA_DIR}/export.txt"
     export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
     nodes = Node.select().where(Node.validated == True)
