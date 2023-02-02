@@ -127,4 +127,7 @@ def get_highest_block(nettype, crypto):
         Node.nettype == nettype,
         Node.crypto == crypto
     ).order_by(Node.last_height.desc()).limit(1).first()
-    return highest.last_height
+    if highest:
+        return highest.last_height
+    else:
+        return 0
