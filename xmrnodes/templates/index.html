@@ -36,28 +36,28 @@
         <span>
           <label for="chainSelect">Chain:</label>
           <select name="chain" id="chainSelect">
-            <option value="monero" autofocus>Monero</option>
-            <option value="wownero">Wownero</option>
+            <option value="monero" {% if request.args.get('chain') == 'monero' %}selected{% endif %}>Monero</option>
+            <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
           </select>
         </span>
 
         <span>
           <label for="networkSelect">Network:</label>
           <select name="network" id="networkSelect">
-            <option value="mainnet" autofocus>Mainnet</option>
-            <option value="testnet">Testnet</option>
-            <option value="stagenet">Stagenet</option>
+            <option value="mainnet" {% if request.args.get('network') == 'mainnet' %}selected{% endif %}>Mainnet</option>
+            <option value="testnet" {% if request.args.get('network') == 'testnet' %}selected{% endif %}>Testnet</option>
+            <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
           </select>
         </span>
         
         <span>
           <label for="cors">Web (CORS):</label>
-          <input type="checkbox" name="cors" id="cors">
+          <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
         </span>
 
         <span>
           <label for="onion">Onion:</label>
-          <input type="checkbox" name="onion" id="onion">
+          <input type="checkbox" name="onion" id="onion" {% if request.args.get('onion') == 'on' %}checked{% endif %}>
         </span>
 
         <span>
