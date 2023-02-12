@@ -99,6 +99,35 @@ def nodes_json():
         }
     })
 
+@app.route("/health.json")
+def health_json():
+    data = {}
+    nodes = Node.select().where(
+        Node.validated == True
+    )
+    for node in nodes:
+        if node.crypto not in data:
+            data[node.crypto] = {}
+        _d = {
+            "available": node.available,
+            "last_height": node.last_height,
+            "datetime_entered": node.datetime_entered,
+            "datetime_checked": node.datetime_checked,
+            "datetime_failed": node.datetime_failed,
+            "checks": [c.health for c in node.get_all_checks()]
+        }
+        nettype = "clear"
+        if node.is_tor:
+            nettype = "onion"
+        elif node.web_compatible:
+            if "web_compatible" not in data[node.crypto]:
+                data[node.crypto]["web_compatible"] = {}
+            data[node.crypto]["web_compatible"][node.url] = _d
+        if nettype not in data[node.crypto]:
+            data[node.crypto][nettype] = {}
+        data[node.crypto][nettype][node.url] = _d
+    return jsonify(data)
+
 @app.route("/haproxy.cfg")
 def haproxy():
     crypto = request.args.get('chain') or 'monero'
