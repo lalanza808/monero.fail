@@ -13,6 +13,6 @@ backend nodes
     balance roundrobin
     option httpchk GET /get_info
     {% for node in nodes -%}
-      server backend-{{ node.id }} {{ node.get_netloc() }}
+      server backend-{{ node.id }} {{ node.get_netloc() }} check inter 10s fall 5 rise 5
     {% endfor %}
 
