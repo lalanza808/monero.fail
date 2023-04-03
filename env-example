@@ -1,0 +1,7 @@
+SECRET_KEY=randomstringyoumakeup
+SERVER_NAME=127.0.0.1:5000
+DATA_DIR=./data
+TOR_HOST=127.0.0.1
+TOR_PORT=9050
+NODE_HOST=singapore.node.xmr.pm
+NODE_PORT=18080

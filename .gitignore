@@ -129,5 +129,4 @@ dmypy.json
 .pyre/
 
 # nodes
-config.py
 data

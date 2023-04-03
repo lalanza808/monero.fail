@@ -164,9 +164,14 @@ def wow_nodes_json():
 
 @app.route("/map")
 def map():
+    try:
+        peers = rw_cache('map_peers')
+    except:
+        flash('Couldn\'t load the map. Try again later.')
+        return redirect('/')
     return render_template(
         "map.html",
-        peers=rw_cache('map_peers'),
+        peers=peers,
         source_node=config.NODE_HOST
     )
 

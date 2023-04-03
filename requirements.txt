@@ -7,3 +7,4 @@ flask_wtf
 pysocks
 git+https://github.com/cdiv1e12/py-levin
 geoip2
+python-dotenv
