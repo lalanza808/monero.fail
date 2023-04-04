@@ -68,9 +68,9 @@ def map():
     return render_template("map.html", peers=peers, source_node=config.NODE_HOST)
 
 
-@bp.route("/resources")
-def resources():
-    return render_template("resources.html")
+@bp.route("/about")
+def about():
+    return render_template("about.html")
 
 
 @bp.route("/add", methods=["GET", "POST"])
