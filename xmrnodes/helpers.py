@@ -22,22 +22,30 @@ def make_request(url: str, path="/get_info", data=None):
     else:
         proxies = None
         timeout = 10
-    r = r_get(url + path, timeout=timeout, proxies=proxies, json=data, headers=headers, verify=False)
+    r = r_get(
+        url + path,
+        timeout=timeout,
+        proxies=proxies,
+        json=data,
+        headers=headers,
+        verify=False,
+    )
     r.raise_for_status()
     return r
+
 
 def determine_crypto(url):
     data = {"method": "get_block_header_by_height", "params": {"height": 0}}
     hashes = {
         "monero": [
-            "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3", #mainnet
-            "48ca7cd3c8de5b6a4d53d2861fbdaedca141553559f9be9520068053cda8430b", #testnet
-            "76ee3cc98646292206cd3e86f74d88b4dcc1d937088645e9b0cbca84b7ce74eb"  #stagenet
+            "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3",  # mainnet
+            "48ca7cd3c8de5b6a4d53d2861fbdaedca141553559f9be9520068053cda8430b",  # testnet
+            "76ee3cc98646292206cd3e86f74d88b4dcc1d937088645e9b0cbca84b7ce74eb",  # stagenet
         ],
         "wownero": [
-            "a3fd635dd5cb55700317783469ba749b5259f0eeac2420ab2c27eb3ff5ffdc5c", #mainnet
-            "d81a24c7aad4628e5c9129f8f2ec85888885b28cf468597a9762c3945e9f29aa", #testnet
-        ]
+            "a3fd635dd5cb55700317783469ba749b5259f0eeac2420ab2c27eb3ff5ffdc5c",  # mainnet
+            "d81a24c7aad4628e5c9129f8f2ec85888885b28cf468597a9762c3945e9f29aa",  # testnet
+        ],
     }
     try:
         r = make_request(url, "/json_rpc", data)
@@ -52,6 +60,7 @@ def determine_crypto(url):
     except:
         return "unknown"
 
+
 def is_onion(url: str):
     _split = url.split(":")
     if len(_split) < 2:
@@ -61,21 +70,23 @@ def is_onion(url: str):
     else:
         return False
 
+
 # Use hacky filesystem cache since i dont feel like shipping redis
 def rw_cache(key_name, data=None):
-    pickle_file = path.join(config.DATA_DIR, f'{key_name}.pkl')
+    pickle_file = path.join(config.DATA_DIR, f"{key_name}.pkl")
     if data:
-        with open(pickle_file, 'wb') as f:
+        with open(pickle_file, "wb") as f:
             f.write(pickle.dumps(data))
             return data
     else:
-        with open(pickle_file, 'rb') as f:
+        with open(pickle_file, "rb") as f:
             pickled_data = pickle.load(f)
             return pickled_data
 
+
 def retrieve_peers(host, port):
     try:
-        print(f'[.] Connecting to {host}:{port}')
+        print(f"[.] Connecting to {host}:{port}")
         sock = socket.socket()
         sock.settimeout(5)
         sock.connect((host, int(port)))
@@ -109,7 +120,7 @@ def retrieve_peers(host, port):
 
             for peer in _peers:
                 try:
-                    peers.append('http://%s:%d' % (peer['ip'].ip, peer['port'].value))
+                    peers.append("http://%s:%d" % (peer["ip"].ip, peer["port"].value))
                 except:
                     pass
 
@@ -121,12 +132,15 @@ def retrieve_peers(host, port):
     else:
         return None
 
+
 def get_highest_block(nettype, crypto):
-    highest = Node.select().where(
-        Node.validated == True,
-        Node.nettype == nettype,
-        Node.crypto == crypto
-    ).order_by(Node.last_height.desc()).limit(1).first()
+    highest = (
+        Node.select()
+        .where(Node.validated == True, Node.nettype == nettype, Node.crypto == crypto)
+        .order_by(Node.last_height.desc())
+        .limit(1)
+        .first()
+    )
     if highest:
         return highest.last_height
     else:

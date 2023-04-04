@@ -9,6 +9,7 @@ from xmrnodes import config
 
 db = SqliteQueueDatabase(f"{config.DATA_DIR}/sqlite.db")
 
+
 class Node(Model):
     id = AutoField()
     url = CharField(unique=True)
@@ -29,7 +30,9 @@ class Node(Model):
         return _url.netloc
 
     def get_failed_checks(self):
-        hcs = HealthCheck.select().where(HealthCheck.node == self, HealthCheck.health == False)
+        hcs = HealthCheck.select().where(
+            HealthCheck.node == self, HealthCheck.health == False
+        )
         return hcs
 
     def get_all_checks(self):
@@ -38,6 +41,7 @@ class Node(Model):
 
     class Meta:
         database = db
+
 
 class Peer(Model):
     id = AutoField()
@@ -60,13 +64,15 @@ class Peer(Model):
     class Meta:
         database = db
 
+
 class HealthCheck(Model):
     id = AutoField()
-    node = ForeignKeyField(Node, backref='healthchecks')
+    node = ForeignKeyField(Node, backref="healthchecks")
     datetime = DateTimeField(default=datetime.utcnow)
     health = BooleanField()
 
     class Meta:
         database = db
+
 
 db.create_tables([Node, HealthCheck, Peer])

@@ -9,7 +9,7 @@
     <div class="title pure-u-1">
       <h2>Add A Node</h2>
     </div>
-    <form method="POST" action="{{ url_for('add') }}" class="pure-form pure-u-1">
+    <form method="POST" action="{{ url_for('meta.add') }}" class="pure-form pure-u-1">
         {{ form.csrf_token }}
         {% for f in form %}
           {% if f.name != 'csrf_token' %}
@@ -80,7 +80,7 @@
         </strong>
         <br><br>
         {% endif %}
-        <a href="{{ url_for('haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
+        <a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
@@ -98,7 +98,7 @@
           <tr>
             <th class="js-sort-string">URL</th>
             <th class="js-sort-number">Height</th>
-            <th class="js-sort-none">Available</th>
+            <th class="js-sort-none">Up</th>
             <th class="js-sort-none">Web<br/>Compatible</th>
             <th class="js-sort-none">Network</th>
             <th class="js-sort-none">Date Added</th>
