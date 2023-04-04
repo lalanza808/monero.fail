@@ -101,7 +101,6 @@
             <th class="js-sort-none">Up</th>
             <th class="js-sort-none">Web<br/>Compatible</th>
             <th class="js-sort-none">Network</th>
-            <th class="js-sort-none">Date Added</th>
             <th class="js-sort-none">Last Checked</th>
             <th class="js-sort-none">History</th>
           </tr>
@@ -126,7 +125,6 @@
               {% endif %}
             </td>
             <td>{{ node.nettype }}</td>
-            <td>{{ node.datetime_entered | humanize }}</td>
             <td>{{ node.datetime_checked | humanize }}</td>
             <td>{% for hc in node.healthchecks %}
               {% if loop.index > loop.length - 6 %}

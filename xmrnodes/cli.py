@@ -37,6 +37,8 @@ def check():
             assert "status" in r.json()
             assert "offline" in r.json()
             assert "height" in r.json()
+            if 'donation_address' in r.json():
+                node.donation_address = r.json()['donation_address']
             has_cors = "Access-Control-Allow-Origin" in r.headers
             is_ssl = node.url.startswith("https://")
             if r.json()["status"] == "OK":

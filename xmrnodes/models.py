@@ -20,6 +20,7 @@ class Node(Model):
     nettype = CharField(null=True)
     last_height = IntegerField(null=True)
     crypto = CharField(null=True)
+    donation_address = CharField(null=True)
     datetime_entered = DateTimeField(default=datetime.utcnow)
     datetime_checked = DateTimeField(default=None, null=True)
     datetime_failed = DateTimeField(default=None, null=True)
