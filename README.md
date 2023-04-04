@@ -34,6 +34,21 @@ make dev
 # access at http://127.0.0.1:5000
 ```
 
+### Background Tasks
+
+There are 3 things that need to run in the background:
+* validating nodes that have been added
+* checking existing node health
+* scraping peer lists
+
+I accomplish this via `crontab` and some management scripts.
+
+```
+./manage.sh validate
+./manage.sh check
+./manace.sh get_peers
+```
+
 ### Production
 
 For production, update `SERVER_NAME` in `.env` to your production URL/domain. Use `manage.sh` (or provided `Makefile`) to serve the Flask process using Gunicorn. 
@@ -45,3 +60,5 @@ For production, update `SERVER_NAME` in `.env` to your production URL/domain. Us
 Runs the Gunicorn process on port 4000. Setup a web server to proxy requests to that port.
 
 Kill production Gunicorn with `make kill`.
+
+
