@@ -321,6 +321,10 @@ def get_peers():
     rw_cache('map_peers', list(Peer.select().execute()))
 
 
+@app.cli.command('init')
+def init():
+    pass
+
 @app.cli.command("validate")
 def validate():
     nodes = Node.select().where(Node.validated == False)
