@@ -1,3 +1,3 @@
 */3 * * * * sh -c "cd ~/git/monero.fail; ./bin/cmd validate"
 30 */4 * * * sh -c "cd ~/git/monero.fail; ./bin/cmd check"
-0 */2 * * * sh -c "cd ~/git/monero.fail; ./bin/cmd get_peers"
+0 */16 * * * sh -c "cd ~/git/monero.fail; ./bin/cmd get_peers"

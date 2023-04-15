@@ -60,9 +60,10 @@
   <p>Source Node: {{ source_node }}</p>
   <p>
     This is not a full representation of the entire Monero network,
-    just a look into the peers being crawled from the source node ({{ source_node }}).
-    New peers are searched for on a recurring interval throughout the day.
-    Older peers are shown as more transparent and will be removed if not seen again after 24 hours.
+    just a look into the peers being recursively crawled from the source node ({{ source_node }}).
+    New peers are searched for once per day.
+    Older peers are shown as more transparent and will be removed 
+    if not seen again after {{ config.PEER_LIFETIME }} hours.
   </p>
   <br>
   <a href="/">Go home</a>

@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from time import sleep
 
 import geoip2.database
 import arrow
@@ -76,16 +77,27 @@ def check():
 
 @bp.cli.command("get_peers")
 def get_peers():
+    """
+    This command requests peers from the configured upstream node and fans out 
+    to recursively scrape all other peers on the network. This will take
+    several hours to run.
+    """
+    # keep track of all peers
     all_peers = []
     print("[+] Preparing to crawl Monero p2p network")
     print(f"[.] Retrieving initial peers from {config.NODE_HOST}:{config.NODE_PORT}")
-    initial_peers = retrieve_peers(config.NODE_HOST, config.NODE_PORT)
-    with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
-        for peer in initial_peers:
-            if peer not in all_peers:
-                all_peers.append(peer)
+
+    # start initial list of peers to scan
+    peers_to_scan = retrieve_peers(config.NODE_HOST, config.NODE_PORT)
+    print(f"[+] Found {len(peers_to_scan)} initial peers to begin scraping.")
+    sleep(3)
+
+    # helper function to add a new peer to the db or update an existing one
+    def save_peer(peer):
+        with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
             _url = urlparse(peer)
             url = f"{_url.scheme}://{_url.netloc}".lower()
+            # add new peer if not in db
             if not Peer.select().where(Peer.url == peer).exists():
                 response = reader.city(_url.hostname)
                 p = Peer(
@@ -98,44 +110,38 @@ def get_peers():
                 )
                 p.save()
                 print(f"{peer} - saving new peer")
+            # or update if it does
             else:
                 p = Peer.select().where(Peer.url == peer).first()
                 p.datetime = datetime.now()
                 p.save()
-
+            return _url
+    
+    # iterate over the whole list until all peers have been scanned
+    # add new peers to the list
+    # skip the peer if we've seen it already
+    try:
+        while peers_to_scan:
+            _peer = peers_to_scan[0]
+            peers_to_scan.pop(0)
+            if _peer in all_peers:
+                print(f'already found {_peer}')
+                continue
+            all_peers.append(_peer)
             try:
-                print(f"[.] Retrieving crawled peers from {_url.netloc}")
-                new_peers = retrieve_peers(_url.hostname, _url.port)
-                for peer in new_peers:
-                    if peer not in all_peers:
-                        all_peers.append(peer)
-                    _url = urlparse(peer)
-                    url = f"{_url.scheme}://{_url.netloc}".lower()
-                    if not Peer.select().where(Peer.url == peer).exists():
-                        response = reader.city(_url.hostname)
-                        p = Peer(
-                            url=peer,
-                            country=response.country.name,
-                            city=response.city.name,
-                            postal=response.postal.code,
-                            lat=response.location.latitude,
-                            lon=response.location.longitude,
-                        )
-                        p.save()
-                        print(f"{peer} - saving new peer")
-                    else:
-                        p = Peer.select().where(Peer.url == peer).first()
-                        p.datetime = datetime.now()
-                        p.save()
+                peer = save_peer(_peer)
+                peers_to_scan += retrieve_peers(peer.hostname, peer.port)
             except:
                 pass
+    except KeyboardInterrupt:
+        print('Stopped.')
 
     print(
         f"[+] Found {len(all_peers)} peers from {config.NODE_HOST}:{config.NODE_PORT}"
     )
     print("[+] Deleting old Monero p2p peers")
     for p in Peer.select():
-        if p.hours_elapsed() > 24:
+        if p.hours_elapsed() > config.PEER_LIFETIME:
             print(f"[.] Deleting {p.url}")
             p.delete_instance()
     rw_cache("map_peers", list(Peer.select().execute()))
