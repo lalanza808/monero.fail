@@ -108,7 +108,13 @@
         <tbody>
           {% for node in nodes %}
           <tr class="js-sort-table">
-            <td>{% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}<span class="nodeURL">{{ node.url }}</span></td>
+            <td>
+              {% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}
+              <span class="nodeURL">{{ node.url }}</span>
+              {% if node.donation_address | seems_legit %}
+                <span class="donationAddress">{{ node.donation_address }}</span>
+              {% endif %}
+            </td>
             <td>{{ node.last_height }}</td>
             <td>
               {% if node.available %}

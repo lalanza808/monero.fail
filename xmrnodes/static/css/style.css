@@ -138,4 +138,14 @@ input[type="text"] {
 
 td img {
   padding-right: .75em;
+  word-wrap: break-word;
+}
+
+.donationAddress {
+  font-size: .8em;
+  user-select: all;
+  color: #ff006e;
+  display: block;
+  padding-top: .35em;
+  word-wrap: break-word;
 }

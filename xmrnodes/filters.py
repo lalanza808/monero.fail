@@ -25,3 +25,8 @@ def trim_arg(all_args, arg_to_trim):
     d = all_args.to_dict()
     d.pop(arg_to_trim)
     return urlencode(d)
+
+
+@bp.app_template_filter("seems_legit")
+def seems_legit(addy):
+    return len(addy) == 97
