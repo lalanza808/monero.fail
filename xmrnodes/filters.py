@@ -29,4 +29,6 @@ def trim_arg(all_args, arg_to_trim):
 
 @bp.app_template_filter("seems_legit")
 def seems_legit(addy):
-    return len(addy) == 97
+    if type(addy) == str:
+        return len(addy) == 97
+    return False
