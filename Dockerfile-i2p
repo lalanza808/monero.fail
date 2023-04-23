@@ -1,0 +1,23 @@
+FROM ubuntu:20.04
+
+RUN apt-get -y update && \
+    apt-get -y install \
+	wget unzip && \
+    apt-get clean
+
+RUN useradd -m -d /home/i2pz i2pz
+
+WORKDIR /tmp/i2pz
+RUN wget https://github.com/i2p-zero/i2p-zero/releases/download/v1.20/i2p-zero-linux.v1.20.zip -O i2p-zero.zip && \
+    unzip i2p-zero.zip && \
+    mv i2p-zero-linux.v1.20 /srv/i2pz && \
+    rm i2p-zero.zip
+
+ADD i2p-entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+RUN chown -R i2pz /srv/i2pz
+
+USER i2pz
+
+CMD /entrypoint.sh

@@ -21,6 +21,13 @@ def init():
     pass
 
 
+@bp.cli.command("i2p")
+def i2p():
+    proxies = {"http": f"socks5h://{config.I2P_HOST}:{config.I2P_PORT}"}
+    r = requests.get("http://vkohxr7ealm23uacawcjpbxi3smas2wajr5ne6sgmmw42ygvjikq.b32.i2p", proxies=proxies)
+    print(r.content)
+
+
 @bp.cli.command("check")
 def check():
     diff = datetime.utcnow() - timedelta(hours=24)
