@@ -61,6 +61,11 @@
         </span>
 
         <span>
+          <label for="i2p">I2P:</label>
+          <input type="checkbox" name="i2p" id="i2p" {% if request.args.get('i2p') == 'on' %}checked{% endif %}>
+        </span>
+
+        <span>
           <input type="submit" value="Filter" class="pure-button pure-pink">
         </span>
 
@@ -96,6 +101,7 @@
       <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">
         <thead>
           <tr>
+            <th class="js-sort-string">Type</th>
             <th class="js-sort-string">URL</th>
             <th class="js-sort-number">Height</th>
             <th class="js-sort-none">Up</th>
@@ -109,7 +115,18 @@
           {% for node in nodes %}
           <tr class="js-sort-table">
             <td>
-              {% if node.is_tor %}<img src="/static/images/tor.svg" width="15px">{% endif %}
+              {% if node.is_tor %}
+                <img src="/static/images/tor.svg" height="20px">
+                <span class="hidden">tor</span>
+                {% elif node.is_i2p %}
+                <img src="/static/images/i2p.svg" height="20px">
+                <span class="hidden">i2p</span>
+                {% else %}
+                <img src="/static/images/clearnet.svg" height="20px">
+                <span class="hidden">clear</span>
+                {% endif %}
+            </td>
+            <td>
               <span class="nodeURL">{{ node.url }}</span>
               {% if node.donation_address | seems_legit %}
                 <span class="donationAddress">{{ node.donation_address }}</span>

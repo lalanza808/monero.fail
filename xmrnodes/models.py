@@ -14,6 +14,7 @@ class Node(Model):
     id = AutoField()
     url = CharField(unique=True)
     is_tor = BooleanField(default=False)
+    is_i2p = BooleanField(default=False)
     available = BooleanField(default=False)
     validated = BooleanField(default=False)
     web_compatible = BooleanField(default=False)

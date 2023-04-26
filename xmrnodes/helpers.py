@@ -19,6 +19,10 @@ def make_request(url: str, path="/get_info", data=None):
         _p = f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"
         proxies = {"http": _p, "https": _p}
         timeout = 30
+    elif is_i2p(url):
+        _p = f"http://{config.I2P_HOST}:{config.I2P_PORT}"
+        proxies = {"http": _p, "https": _p}
+        timeout = 30
     else:
         proxies = None
         timeout = 10
@@ -60,6 +64,14 @@ def determine_crypto(url):
     except:
         return "unknown"
 
+def is_i2p(url: str):
+    _split = url.split(":")
+    if len(_split) < 2:
+        return False
+    if _split[1].endswith(".i2p"):
+        return True
+    else:
+        return False
 
 def is_onion(url: str):
     _split = url.split(":")
