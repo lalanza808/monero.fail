@@ -117,7 +117,8 @@
             <td>
               {% if node.is_tor %}
                 <img src="/static/images/tor.svg" height="20px">
-              {% elif node.is_i2p %}
+                <span class="hidden">tor</span>
+                {% elif node.is_i2p %}
                 <img src="/static/images/i2p.svg" height="20px">
                 <span class="hidden">i2p</span>
                 {% else %}
