@@ -1,23 +1,29 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-RUN apt-get -y update && \
-    apt-get -y install \
-	wget unzip && \
-    apt-get clean
+ENV DEBIAN_FRONTEND noninteractive
 
-RUN useradd -m -d /home/i2pz i2pz
+RUN apt-get update && \
+    apt-get install wget sudo -y
 
-WORKDIR /tmp/i2pz
-RUN wget https://github.com/i2p-zero/i2p-zero/releases/download/v1.20/i2p-zero-linux.v1.20.zip -O i2p-zero.zip && \
-    unzip i2p-zero.zip && \
-    mv i2p-zero-linux.v1.20 /srv/i2pz && \
-    rm i2p-zero.zip
+WORKDIR /tmp/i2p
+RUN wget https://github.com/PurpleI2P/i2pd/releases/download/2.47.0/i2pd_2.47.0-1jammy1_amd64.deb -O i2pd.deb -q
+RUN apt install ./i2pd.deb -y
 
-ADD i2p-entrypoint.sh /entrypoint.sh
+RUN rm -rf /tmp/i2p
 
+RUN adduser \
+   --system \
+   --shell /bin/bash \
+   --gecos 'i2p' \
+   --group \
+   --disabled-password \
+   --home /home/i2p \
+   --uid 1000 \
+   i2p
+COPY conf/i2p-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-RUN chown -R i2pz /srv/i2pz
-
-USER i2pz
-
+EXPOSE 4444
 CMD /entrypoint.sh
+
+
+

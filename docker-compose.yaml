@@ -1,18 +1,20 @@
 version: '3'
 services:
   tor:
-    container_name: tor
+    container_name: fail-tor
     build:
       context: .
-      dockerfile: Dockerfile-torsocks
+      dockerfile: Dockerfile-tor
     restart: unless-stopped
     ports:
       - 127.0.0.1:9050:9050
   i2p:
-    container_name: i2p
+    container_name: fail-i2p
     build:
       context: .
       dockerfile: Dockerfile-i2p
     restart: unless-stopped
     ports:
-      - 127.0.0.1:4444:4444
+        - 127.0.0.1:4444:4444
+    volumes:
+        - ./data/i2pd:/home/i2p/.i2pd

@@ -8,7 +8,7 @@ import requests
 from flask import Blueprint
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import determine_crypto, is_onion, make_request
+from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
 from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -19,13 +19,6 @@ bp = Blueprint("cli", "cli", cli_group=None)
 @bp.cli.command("init")
 def init():
     pass
-
-
-@bp.cli.command("i2p")
-def i2p():
-    proxies = {"http": f"socks5h://{config.I2P_HOST}:{config.I2P_PORT}"}
-    r = requests.get("http://vkohxr7ealm23uacawcjpbxi3smas2wajr5ne6sgmmw42ygvjikq.b32.i2p", proxies=proxies)
-    print(r.content)
 
 
 @bp.cli.command("check")
@@ -178,6 +171,7 @@ def validate():
                 node.datetime_checked = now
                 node.crypto = crypto
                 node.is_tor = is_onion(node.url)
+                node.is_i2p = is_i2p(node.url)
                 node.save()
             else:
                 logging.info("unexpected nettype")

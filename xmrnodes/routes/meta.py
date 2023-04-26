@@ -19,6 +19,7 @@ def index():
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
     onion = request.args.get("onion", False)
+    i2p = request.args.get("i2p", False)
     show_all = "true" == request.args.get("all", "false")
     web_compatible = request.args.get("cors", False)
     highest_block = get_highest_block(nettype, crypto)
@@ -42,6 +43,8 @@ def index():
     nodes = nodes.order_by(Node.datetime_entered.desc())
     if onion:
         nodes = nodes.where(Node.is_tor == True)
+    if i2p:
+        nodes = nodes.where(Node.is_i2p == True)
 
     nodes = [n for n in nodes]
     shuffle(nodes)
