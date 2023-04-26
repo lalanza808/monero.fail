@@ -1,6 +1,8 @@
 # monero.fail
 
-Monero node tracker
+Monero node tracker.
+
+Stores Monero (and Wownero) nodes for clearnet, Tor, and I2P.
 
 ## Setup
 
@@ -41,9 +43,10 @@ There are 3 things that need to run in the background:
 * checking existing node health
 * scraping peer lists
 
-I accomplish this via `crontab` and some management scripts.
+I accomplish this via `crontab` and some management scripts. Ensure the i2p and tor containers are running (or just on the host) so that requests can be proxied.
 
 ```
+docker-compose up -d
 ./manage.sh validate
 ./manage.sh check
 ./manace.sh get_peers
