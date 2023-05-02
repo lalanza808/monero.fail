@@ -1,4 +1,10 @@
 version: '3'
+x-log-config: &log-config
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "5"
 services:
   tor:
     container_name: fail-tor
@@ -8,6 +14,7 @@ services:
     restart: unless-stopped
     ports:
       - 127.0.0.1:9050:9050
+    <<: *log-config
   i2p:
     container_name: fail-i2p
     build:
@@ -16,5 +23,4 @@ services:
     restart: unless-stopped
     ports:
         - 127.0.0.1:4444:4444
-    volumes:
-        - ./data/i2pd:/home/i2p/.i2pd
+    <<: *log-config
