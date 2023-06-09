@@ -6,7 +6,6 @@ from os import path
 import geoip2.database
 from requests import get as r_get
 from urllib.parse import urlparse
-from levin.section import Section
 from levin.bucket import Bucket
 from levin.ctypes import *
 from levin.constants import LEVIN_SIGNATURE
@@ -167,3 +166,11 @@ def get_geoip(ip_or_dns):
     host = host if resolved == host else resolved
     with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
         return reader.city(host)
+
+def get_whois(ip_or_dns):
+    pass
+
+# asn
+# asn_cidr
+# asn_country_code
+# asn_description
