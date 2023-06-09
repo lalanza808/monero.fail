@@ -5,12 +5,11 @@ from time import sleep
 import geoip2.database
 import arrow
 import requests
-import click
 from flask import Blueprint
 from urllib.parse import urlparse
 
 from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
-from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block
+from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block, get_geoip
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
@@ -176,7 +175,6 @@ def validate():
             is_ssl = node.url.startswith("https://")
             nettype = r.json()["nettype"]
             crypto = determine_crypto(node.url)
-            logging.info("success")
             if nettype in ["mainnet", "stagenet", "testnet"]:
                 node.nettype = nettype
                 node.available = True
@@ -187,7 +185,17 @@ def validate():
                 node.crypto = crypto
                 node.is_tor = is_onion(node.url)
                 node.is_i2p = is_i2p(node.url)
+                if not node.is_tor and not node.is_i2p:
+                    geoip = get_geoip(node.url)
+                    node.country_name = geoip.country.name
+                    node.country_code = geoip.country.iso_code
+                    node.city = geoip.city.name
+                    node.postal = geoip.postal.code
+                    node.lat = geoip.location.latitude
+                    node.lon = geoip.location.longitude
+                    logging.info(f"found geo data for {node.url} - {node.country_code}, {node.country_name}, {node.city}")
                 node.save()
+                logging.info("success")
             else:
                 logging.info("unexpected nettype")
         except requests.exceptions.ConnectTimeout:
@@ -203,7 +211,7 @@ def validate():
             logging.info("http error, 4xx or 5xx")
             node.delete_instance()
         except Exception as e:
-            logging.info("failed for reasons unknown")
+            logging.info(f"failed for reasons unknown: {e}")
             node.delete_instance()
 
 

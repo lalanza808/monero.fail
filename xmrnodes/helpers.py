@@ -3,7 +3,9 @@ import socket
 import pickle
 from os import path
 
+import geoip2.database
 from requests import get as r_get
+from urllib.parse import urlparse
 from levin.section import Section
 from levin.bucket import Bucket
 from levin.ctypes import *
@@ -157,3 +159,11 @@ def get_highest_block(nettype, crypto):
         return highest.last_height
     else:
         return 0
+
+
+def get_geoip(ip_or_dns):
+    host = urlparse(ip_or_dns).netloc.split(':')[0]
+    resolved = socket.gethostbyname(host)
+    host = host if resolved == host else resolved
+    with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
+        return reader.city(host)
