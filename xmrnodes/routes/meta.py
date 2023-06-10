@@ -1,9 +1,15 @@
 import re
+from io import BytesIO
 from random import shuffle
 
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from urllib.parse import urlparse
 from flask import request, redirect, Blueprint
 from flask import render_template, flash, Response
-from urllib.parse import urlparse
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 from xmrnodes.helpers import rw_cache, get_highest_block
 from xmrnodes.forms import SubmitNode
@@ -59,6 +65,33 @@ def index():
         form=form,
         web_compatible=web_compatible,
     )
+
+
+@bp.route('/plot/<int:node_id>.png')
+def plot_health(node_id):
+    node = Node.get(node_id).healthchecks
+    if not node:
+        return None
+    df = pd.DataFrame(node.dicts())
+    df['health'] = df['health'].astype(int)
+    fig = Figure(figsize=(3,3), tight_layout=True)
+    output = BytesIO()
+    axis = fig.add_subplot()
+    dff = df.groupby(['health']).agg({'health': 'count'})
+    if 0 not in dff.index:
+        dff.loc[0] = 0 
+        print(dff.index)
+        dff = dff.sort_index()  # sorting by index
+    axis.pie(
+        dff['health'], 
+        colors=['#B76D68', '#78BC61'],
+        radius=8,
+        wedgeprops={"linewidth": 2, "edgecolor": "white"}, 
+        frame=True
+    )
+    axis.axis('off')
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
 
 
 @bp.route("/map")

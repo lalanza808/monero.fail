@@ -1,0 +1,82 @@
+body {
+    background-color: #1B2432;
+    color: #f9f9f9;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.media-content .title {
+    color: #1B2432;
+}
+
+.title {
+    color: #f9f9f9;
+}
+
+.card {
+    background-color: #F1F2EB;
+}
+
+.card .media:not(:last-child) {
+    margin-bottom: 0;
+}
+
+.card-content {
+    padding: 1em;
+    margin: 1em;
+}
+
+.smol {
+    font-size: .75em;
+}
+
+.donationAddress {
+    font-size: .8em;
+    user-select: all;
+    color: #ff006e;
+    display: block;
+    padding-top: .35em;
+    word-wrap: break-word;
+}
+  
+.asn {
+    font-size: .8em;
+    color: #ff006e;
+    display: block;
+    word-wrap: break-word;
+}
+
+.nodeURL {
+    user-select: all;
+    font-size: 1em;
+}
+
+.messages {
+    width: 30em;
+    padding: 1em;
+    position: absolute;
+    right: 0;
+}
+
+#addNodeForm {
+    width: 50%;
+}
+
+#webCompat {
+    margin: 1em;
+}
+
+.dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.glowing-green {
+    background-color: #78BC61;
+}
+
+.glowing-red {
+    background-color: #B76D68;
+}

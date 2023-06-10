@@ -1,59 +1,6 @@
-<!DOCTYPE html>
- <html lang="en">
- <head>
-     <meta charset="UTF-8">
-     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-     <meta name="viewport" content="width=device-width, initial-scale=1">
-     <meta name="HandheldFriendly" content="True">
-     <meta name="MobileOptimized" content="320">
-     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
-     <meta property="fb:app_id" content="0" />
-     <meta property="og:image" content="https://www.getmonero.org/press-kit/symbols/monero-symbol-on-white-480.png" />
-     <meta property="og:description" content="xmrnodes" />
-     <meta property="og:url" content="http://localhost" />
-     <meta property="og:title" content="XMR Nodes" />
-     <meta property="og:type" content="website" />
-     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-     <meta name="theme-color" content="#ffffff">
-     <meta name="apple-mobile-web-app-title" content="XMR Nodes">
-     <meta name="application-name" content="XMR Nodes">
-     <meta name="msapplication-TileColor" content="#da532c">
-     <meta name="keywords" content="wownero, monero, xmr, bitmonero, cryptocurrency">
-     <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" type="text/css">
-     <style>
-       .map {
-         height: 600px;
-         margin: 2em;
-         padding: 0;
-       }
-       .popover-body {
-          min-width: 276px;
-        }
-        .center.info {
-          width: 50%;
-          margin: auto;
-          padding: 2em;
-        }
-     </style>
-     <script src="https://cdn.polyfill.io/v3/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL,TextDecoder"></script>
-     <script src="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
-     <script src="//code.jquery.com/jquery-3.5.1.min.js"></script>
-     <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
-     <title>XMR Nodes</title>
- </head>
+{% extends 'base.html' %}
 
- <body>
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class="flashes pure-u-1 center">
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
+{% block content %}
 
 <div class="center info">
   <p>Peers seen ~24 hours: {{ peers | length }}</p>
@@ -65,12 +12,31 @@
     Older peers are shown as more transparent and will be removed 
     if not seen again after {{ config.PEER_LIFETIME }} hours.
   </p>
-  <br>
-  <a href="/">Go home</a>
 </div>
 <div id="map" class="map"></div>
 <div id="popup" class="popup" title="Welcome to OpenLayers"></div>
 
+<link rel="stylesheet" href="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" type="text/css">
+<style>
+  .map {
+    height: 600px;
+    margin: 2em;
+    padding: 0;
+  }
+  .popover-body {
+    min-width: 276px;
+  }
+  .center.info {
+    width: 50%;
+    margin: auto;
+    padding: 2em;
+  }
+</style>
+<script src="https://cdn.polyfill.io/v3/polyfill.min.js?features=fetch,requestAnimationFrame,Element.prototype.classList,URL,TextDecoder"></script>
+<script src="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+<script src="//code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
 <script>
  // Marker layer
  markerLayer = new ol.layer.Vector({
@@ -157,6 +123,4 @@
       });
   });
 </script>
-
-</body>
-</html>
+{% endblock %}

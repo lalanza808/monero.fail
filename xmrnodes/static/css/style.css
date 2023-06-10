@@ -134,6 +134,7 @@ input[type="text"] {
 
 .nodeURL {
   user-select: all;
+  font-size: 1em;
 }
 
 td img {
@@ -144,6 +145,14 @@ td img {
 .donationAddress {
   font-size: .8em;
   user-select: all;
+  color: #ff006e;
+  display: block;
+  padding-top: .35em;
+  word-wrap: break-word;
+}
+
+.asn {
+  font-size: .8em;
   color: #ff006e;
   display: block;
   padding-top: .35em;

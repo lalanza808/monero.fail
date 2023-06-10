@@ -4,6 +4,7 @@ import pickle
 from os import path
 
 import geoip2.database
+from ipwhois import ipwhois
 from requests import get as r_get
 from urllib.parse import urlparse
 from levin.bucket import Bucket
@@ -159,18 +160,21 @@ def get_highest_block(nettype, crypto):
     else:
         return 0
 
-
-def get_geoip(ip_or_dns):
-    host = urlparse(ip_or_dns).netloc.split(':')[0]
+def get_host(node_url):
+    host = urlparse(node_url).netloc.split(':')[0]
     resolved = socket.gethostbyname(host)
-    host = host if resolved == host else resolved
+    return host if resolved == host else resolved
+
+
+def get_geoip(node_url):
+    host = get_host(node_url)
     with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
         return reader.city(host)
 
-def get_whois(ip_or_dns):
-    pass
-
-# asn
-# asn_cidr
-# asn_country_code
-# asn_description
+def get_whois(node_url):
+    host = get_host(node_url)
+    try:
+        who = ipwhois.IPWhois(host).lookup_rdap()
+        return who
+    except:
+        return None

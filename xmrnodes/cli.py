@@ -8,7 +8,7 @@ import requests
 from flask import Blueprint
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
+from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request, get_whois
 from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block, get_geoip
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -23,7 +23,7 @@ def init():
 
 @bp.cli.command("check")
 def check_nodes():
-    diff = datetime.utcnow() - timedelta(hours=72)
+    diff = datetime.utcnow() - timedelta(hours=96)
     checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
     for check in checks:
         print("Deleting check", check.id)
@@ -194,6 +194,13 @@ def validate():
                     node.lat = geoip.location.latitude
                     node.lon = geoip.location.longitude
                     logging.info(f"found geo data for {node.url} - {node.country_code}, {node.country_name}, {node.city}")
+                    whois = get_whois(node.url)
+                    if whois:
+                        logging.info(f"found whois data for {node.url}")
+                        node.asn = whois['asn']
+                        node.asn_cidr = whois['asn_cidr']
+                        node.asn_country_code = whois['asn_country_code']
+                        node.asn_description = whois['asn_description']
                 node.save()
                 logging.info("success")
             else:

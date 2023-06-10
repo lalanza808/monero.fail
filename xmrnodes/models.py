@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+from statistics import mean
 from datetime import datetime
 
 from peewee import *
@@ -28,6 +29,10 @@ class Node(Model):
     postal = IntegerField(null=True)
     lat = FloatField(null=True)
     lon = FloatField(null=True)
+    asn = CharField(null=True)
+    asn_cidr = CharField(null=True)
+    asn_country_code = CharField(null=True)
+    asn_description = CharField(null=True)
     datetime_entered = DateTimeField(default=datetime.utcnow)
     datetime_checked = DateTimeField(default=None, null=True)
     datetime_failed = DateTimeField(default=None, null=True)
@@ -46,6 +51,16 @@ class Node(Model):
     def get_all_checks(self):
         hcs = HealthCheck.select().where(HealthCheck.node == self)
         return hcs
+    
+    @property
+    def uptime(self):
+        hcs = self.healthchecks
+        ups = [1 for i in hcs if i.health == True]
+        downs = [0 for i in hcs if i.health == False]
+        if (len(ups + downs)):
+            m = mean(ups + downs)
+            return int(m * 100)
+        return 0
 
     class Meta:
         database = db
@@ -78,6 +93,10 @@ class HealthCheck(Model):
     node = ForeignKeyField(Node, backref="healthchecks")
     datetime = DateTimeField(default=datetime.utcnow)
     health = BooleanField()
+
+    @property
+    def color(self):
+        return 'green' if self.health else 'red'
 
     class Meta:
         database = db

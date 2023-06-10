@@ -5,33 +5,31 @@
 
 <div id="index" class="container">
 
-  <div id="addnode" class="pure-g center section">
-    <div class="title pure-u-1">
-      <h2>Add A Node</h2>
-    </div>
-    <form method="POST" action="{{ url_for('meta.add') }}" class="pure-form pure-u-1">
+  <div id="addnode" class="section">
+    <h2 class="title is-4">Add A Node</h2>
+    <form method="POST" action="{{ url_for('meta.add') }}" id="addNodeForm">
         {{ form.csrf_token }}
-        {% for f in form %}
-          {% if f.name != 'csrf_token' %}
-            <div class="form-group">
-              {{ f.label }}
-              {{ f }}
-              <button type="submit" class="pure-button pure-button-primary">Submit</button>
-            </div>
-          {% endif %}
-        {% endfor %}
+        <div class="field">
+          <div class="control">
+            <input class="input" type="text" placeholder="http://mynode.com:18081" id="node_url" name="node_url" required>
+          </div>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-link">Submit</button>
+          </div>
+        </div>
         <ul>
         {% for field, errors in form.errors.items() %}
             <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
         {% endfor %}
         </ul>
-        
     </form>
   </div>
 
-  <div id="nodes" class="pure-u-1 section">
-    <h2 class="center">Find a Node</h2>
-    <div class="center" id="filters">
+  <div id="nodes" class="section">
+    <h2 class="title is-4">Find a Node</h2>
+    <div class="" id="filters">
       <form>
         <span>
           <label for="chainSelect">Chain:</label>
@@ -40,7 +38,6 @@
             <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
           </select>
         </span>
-
         <span>
           <label for="networkSelect">Network:</label>
           <select name="network" id="networkSelect">
@@ -49,48 +46,42 @@
             <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
           </select>
         </span>
-        
         <span>
-          <label for="cors">Web (CORS):</label>
+          <label for="cors">CORS:</label>
           <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
         </span>
-
         <span>
           <label for="onion">Onion:</label>
           <input type="checkbox" name="onion" id="onion" {% if request.args.get('onion') == 'on' %}checked{% endif %}>
         </span>
-
         <span>
           <label for="i2p">I2P:</label>
           <input type="checkbox" name="i2p" id="i2p" {% if request.args.get('i2p') == 'on' %}checked{% endif %}>
         </span>
-
         <span>
           <input type="submit" value="Filter" class="pure-button pure-pink">
         </span>
-
         <span>
           <a href="/"><input type="button" value="Reset" class="pure-button pure-grey"></a>
         </span>
       </form>
     </div>
+
     {% if nodes %}
     <div class="xmrnodes">
-      <p class="center">
+      <p class="">
         {% if web_compatible %}
-        <strong>
-          Web compatible means the node is run in such a way that it allows web clients to access their APIs (CORS headers allow all and secure HTTP / TLS terminated).
-          <br>
-          The more nodes there are running with these settings the more robust web clients will be in the future.
-        </strong>
-        <br><br>
+          <div class="notification is-info is-light" id="webCompat">
+            Web compatible means the node is run in such a way that it allows web clients to access their APIs (CORS headers allow all and secure HTTP / TLS terminated).
+            The more nodes there are running with these settings the more robust web clients will be in the future.
+          </div>
         {% endif %}
         <a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
       </p>
-      <p class="center">Showing {{ nodes | length }} nodes.
+      <p class="">Showing {{ nodes | length }} nodes.
         {% if 'all' not in request.args %}
         <a href="{% if request.args %}{{ request.url }}&{% else %}?{% endif %}all=true">Show All</a>
         {% else %}
@@ -98,67 +89,125 @@
         {% endif %}
       </p>
       <br>
-      <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">
-        <thead>
-          <tr>
-            <th class="js-sort-string">Type</th>
-            <th class="js-sort-string">URL</th>
-            <th class="js-sort-number">Height</th>
-            <th class="js-sort-none">Up</th>
-            <th class="js-sort-none">Web<br/>Compatible</th>
-            <th class="js-sort-none">Network</th>
-            <th class="js-sort-none">Last Checked</th>
-            <th class="js-sort-none">History</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for node in nodes %}
-          <tr class="js-sort-table">
-            <td>
-              {% if node.is_tor %}
-                <img src="/static/images/tor.svg" height="20px">
-                <span class="hidden">tor</span>
-                {% elif node.is_i2p %}
-                <img src="/static/images/i2p.svg" height="20px">
-                <span class="hidden">i2p</span>
-                {% else %}
-                <img src="/static/images/clearnet.svg" height="20px">
-                <span class="hidden">clear</span>
-                {% endif %}
-            </td>
-            <td>
-              <span class="nodeURL">{{ node.url }}</span>
-              {% if node.donation_address | seems_legit %}
-                <span class="donationAddress">{{ node.donation_address }}</span>
-              {% endif %}
-            </td>
-            <td>{{ node.last_height }}</td>
-            <td>
-              {% if node.available %}
-                <span class="dot glowing-green"></span>
-              {% else %}
-                <span class="dot glowing-red""></span>
-              {% endif %}
-            </td>
-            <td>
-              {% if node.web_compatible %}
-              <img src="/static/images/success.svg" class="filter-green" width=16px>
-              {% else %}
-              <img src="/static/images/error.svg" class="filter-red" width=16px>
-              {% endif %}
-            </td>
-            <td>{{ node.nettype }}</td>
-            <td>{{ node.datetime_checked | humanize }}</td>
-            <td>{% for hc in node.healthchecks %}
-              {% if loop.index > loop.length - 6 %}
-              <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
-              {% endif %}
+      <div>
+           
+        <div class="columns">
+
+          <div class="column">
+            {% for node in nodes %}
+            <div class="card">
+
+              <div class="card-content">
+
+                <div class="media">
+                  <div class="media-left">
+                    <figure class="image is-32x32">
+                      {% if node.is_tor %}
+                        <img src="/static/images/tor.svg" />
+                      {% elif node.is_i2p %}
+                        <img src="/static/images/i2p.svg" />
+                        {% else %}
+                        <span class="fflag fflag-{{ node.country_code }} ff-lg mr-4" title="{{ node.asn_description }}"></span>
+                      {% endif %}
+                    </figure>
+                  </div>
+                  <div class="media-content">
+                    <p class="title is-6 nodeURL">{{ node.url }}</p>
+                    {% if node.asn %}
+                      <p class="subtitle asn">
+                        ASN: {{ node.asn }} -
+                        {{ node.asn_description}}
+                      </p>
+                    {% endif %}
+                    <div class="statusDots subtitle">
+                    {% for check in node.healthchecks %}
+                      <span class="dot glowing-{{ check.color }}"></span>
+                    {% endfor %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="content">
+                  <br>
+                  <p class="smol">
+                    last checked {{ node.datetime_checked | humanize }}<br />
+                    {{ node.uptime }}% uptime
+                  </p>
+                </div>
+
+              </div>
+
+              <footer class="card-footer">
+                <p class="card-footer-item">
+                  <span>
+                    View on <a href="https://twitter.com/codinghorror/status/506010907021828096">Twitter</a>
+                  </span>
+                </p>
+                <p class="card-footer-item">
+                  <span>
+                    Share on <a href="#">Facebook</a>
+                  </span>
+                </p>
+              </footer>
+
+            </div>
             {% endfor %}
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+          </div>
+
+          <div class="column">
+            <article class="panel is-info">
+              <p class="panel-heading">
+                Info
+              </p>
+              <p class="panel-tabs">
+                <a class="is-active">All</a>
+                <a>Public</a>
+                <a>Private</a>
+                <a>Sources</a>
+                <a>Forks</a>
+              </p>
+              <div class="panel-block">
+                <p class="control has-icons-left">
+                  <input class="input is-info" type="text" placeholder="Search">
+                  <span class="icon is-left">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                  </span>
+                </p>
+              </div>
+              <a class="panel-block is-active">
+                <span class="panel-icon">
+                  <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                bulma
+              </a>
+              <a class="panel-block">
+                <span class="panel-icon">
+                  <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                marksheet
+              </a>
+              <a class="panel-block">
+                <span class="panel-icon">
+                  <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                minireset.css
+              </a>
+              <a class="panel-block">
+                <span class="panel-icon">
+                  <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                jgthms.github.io
+              </a>
+            </article>
+          </div>
+
+        </div>
+
+      
+        
+        <!-- </tbody>
+      </table> -->
+      </div>
     </div>
     {% else %}
       <p class="center">No nodes in the database yet...</p>

@@ -19,36 +19,69 @@
      <meta name="application-name" content="XMR Nodes">
      <meta name="msapplication-TileColor" content="#da532c">
      <meta name="keywords" content="wownero, monero, xmr, bitmonero, cryptocurrency">
-     <link href="/static/css/normalize.css" rel="stylesheet">
-     <link href="/static/css/pure.css" rel="stylesheet">
-     <link href="/static/css/style.css" rel="stylesheet">
+     <link href="/static/css/freakflags.css" rel="stylesheet">
+     <link href="/static/css/bulma.min.css" rel="stylesheet">
+     <link href="/static/css/main.css" rel="stylesheet">
      <title>XMR Nodes</title>
  </head>
 
  <body>
 
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <img src="/static/images/monero.svg" width="25" height="28">.fail
+      </a>
+      <a role="button" class="navbar-burger" data-target="navMenu" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="navMenu" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            Links
+          </a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="{{ url_for('meta.about') }}">
+              About
+            </a>
+            <a class="navbar-item" href="{{ url_for('meta.map') }}">
+              Map
+            </a>
+            <a class="navbar-item" href="mailto:lza_menace@protonmail.com" target="_blank">
+              Contact
+            </a>
+            <a class="navbar-item" href="https://github.com/lalanza808/monero.fail" target="_blank">
+              Source Code
+            </a>
+            <hr class="navbar-divider">
+            <a class="navbar-item" href="https://moneroinfodump.neocities.org/" target="_blank">
+              Info Dump
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
-    <ul class="flashes pure-u-1 center">
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
+    <div class="messages">
+      {% for message in messages %}
+        <article class="message is-info">
+          <div class="message-body">
+            {{ message }}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
   {% endif %}
 {% endwith %}
 
-<div id="" class="center">
-  <br>
-  <a href="{{ url_for('meta.about') }}">about</a>
-  -
-  <a href="{{ url_for('meta.map') }}">map</a>
-  -
-  <a href="https://twitter.com/lza_menace" target="_blank">contact</a>
-  -
-  <a href="https://github.com/lalanza808/monero.fail" target="_blank">source</a>
-  -
-  <a href="https://moneroinfodump.neocities.org/" target="_blank">infodump</a>
-</div>
+
 
  <!-- Page Content -->
  {% block content %} {% endblock %}
@@ -57,6 +90,20 @@
  <div id="footer" class="center">
    <a href="#">Go to top</a>
  </div>
+
+ <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    $navbarBurgers.forEach( el => {
+      el.addEventListener('click', () => {
+        const target = el.dataset.target;
+        const $target = document.getElementById(target);
+        el.classList.toggle('is-active');
+        $target.classList.toggle('is-active');
+      });
+    });
+  });
+ </script>
 
  </body>
  </html>
