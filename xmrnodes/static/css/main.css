@@ -5,6 +5,14 @@ body {
     font-size: 14px;
 }
 
+.top-section {
+    padding: 3rem 1.5rem 0 1.5rem;
+}
+
+.bottom-section {
+    padding: 1rem 1.5rem;
+}
+
 .checkbox:hover, .radio:hover {
     color: #f9f9f9;
 }

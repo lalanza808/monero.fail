@@ -4,8 +4,7 @@
 
 
 <div class="container">
-
-  <div class="columns section">
+  <div class="columns top-section">
     <div class="column">
       <h2 class="title is-4">Add A Node</h2>
       <form method="POST" action="{{ url_for('meta.add') }}" id="addNodeForm">
@@ -70,8 +69,7 @@
       </form>
     </div>
   </div>
-
-  <div id="nodes" class="section">
+  <div id="nodes" class="bottom-section">
     {% if (nodes | length) == 0 %}
       <div class="section">
         <h1 class="title is-5">No nodes in the database yet...</h1>
@@ -100,11 +98,17 @@
       </p>
 
       {% for country in countries %}
-        <span class="tag is-dark">
-          <span class="fflag fflag-{{ country }} ff-md m-4" title="{{ country }}"></span>
-          {{ country }}
-          ({{ countries[country] }})
-        </span>
+        {% if 'country' in request.args %}
+          <a href="{{ request.path }}?{{ request.args | pop_arg('country') }}&country={{ country }}">
+        {% else %}
+          <a href="{% if request.args %}{{ request.url }}&{% else %}?{% endif %}country={{ country}}">
+        {% endif %}
+          <span class="tag is-dark">
+            <span class="fflag fflag-{{ country }} ff-md m-4" title="{{ country }}"></span>
+            {{ country }}
+            ({{ countries[country] }})
+          </span>
+        </a>
       {% endfor %}
 
       <br>

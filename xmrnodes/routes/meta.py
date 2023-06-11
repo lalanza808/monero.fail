@@ -26,6 +26,7 @@ def index():
     crypto = request.args.get("chain", "monero")
     onion = request.args.get("onion", False)
     i2p = request.args.get("i2p", False)
+    country = request.args.get('country')
     show_all = "true" == request.args.get("all", "false")
     web_compatible = request.args.get("cors", False)
     highest_block = get_highest_block(nettype, crypto)
@@ -52,9 +53,6 @@ def index():
     if i2p:
         nodes = nodes.where(Node.is_i2p == True)
 
-    nodes = [n for n in nodes]
-    shuffle(nodes)
-
     countries = {}
     for node in nodes:
         c = node.country_code
@@ -63,6 +61,14 @@ def index():
         if c not in countries:
             countries[c] = 0
         countries[c] += 1
+    
+    if country:
+        if country == '??':
+            country = None
+        nodes = nodes.where(Node.country_code == country)
+
+    nodes = [n for n in nodes]
+    shuffle(nodes)
 
     return render_template(
         "index.html",
