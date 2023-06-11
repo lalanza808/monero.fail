@@ -3,72 +3,82 @@
 {% block content %}
 
 
-<div id="index" class="container">
+<div class="container">
 
-  <div id="addnode" class="section">
-    <h2 class="title is-4">Add A Node</h2>
-    <form method="POST" action="{{ url_for('meta.add') }}" id="addNodeForm">
-        {{ form.csrf_token }}
+  <div class="columns section">
+    <div class="column">
+      <h2 class="title is-4">Add A Node</h2>
+      <form method="POST" action="{{ url_for('meta.add') }}" id="addNodeForm">
+          {{ form.csrf_token }}
+          <div class="field">
+            <div class="control">
+              <input class="input" type="text" placeholder="http://mynode.com:18081" id="node_url" name="node_url" required>
+            </div>
+          </div>
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-link">Submit</button>
+            </div>
+          </div>
+          <ul>
+          {% for field, errors in form.errors.items() %}
+              <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
+          {% endfor %}
+          </ul>
+      </form>
+    </div>
+    <div class="column">
+      <h2 class="title is-4">Find a Node</h2>
+      <form>
         <div class="field">
           <div class="control">
-            <input class="input" type="text" placeholder="http://mynode.com:18081" id="node_url" name="node_url" required>
+            <div class="select">
+              <select name="chain">
+                <option value="monero" {% if request.args.get('chain') == 'monero' %}selected{% endif %}>Monero</option>
+                <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
+              </select>
+            </div>
+            <div class="select">
+              <select name="network" id="networkSelect">
+                <option value="mainnet" {% if request.args.get('network') == 'mainnet' %}selected{% endif %}>Mainnet</option>
+                <option value="testnet" {% if request.args.get('network') == 'testnet' %}selected{% endif %}>Testnet</option>
+                <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
+              </select>
+            </div>
+            <label class="checkbox">
+              CORS:
+              <input type="checkbox" name="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
+            </label>
+            <label class="checkbox">
+              Onion:
+              <input type="checkbox" name="onion" id="onion" {% if request.args.get('onion') == 'on' %}checked{% endif %}>
+            </label>
+            <label type="checkbox">
+              I2P:
+              <input type="checkbox" name="i2p" id="i2p" {% if request.args.get('i2p') == 'on' %}checked{% endif %}>
+            </label>
           </div>
         </div>
         <div class="field is-grouped">
           <div class="control">
             <button class="button is-link">Submit</button>
           </div>
+          <div class="control">
+            <a href="/" class="button is-link is-light">Cancel</a>
+          </div>
         </div>
-        <ul>
-        {% for field, errors in form.errors.items() %}
-            <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
-        {% endfor %}
-        </ul>
-    </form>
+      </form>
+    </div>
   </div>
 
   <div id="nodes" class="section">
-    <h2 class="title is-4">Find a Node</h2>
-    <div class="" id="filters">
-      <form>
-        <span>
-          <label for="chainSelect">Chain:</label>
-          <select name="chain" id="chainSelect">
-            <option value="monero" {% if request.args.get('chain') == 'monero' %}selected{% endif %}>Monero</option>
-            <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
-          </select>
-        </span>
-        <span>
-          <label for="networkSelect">Network:</label>
-          <select name="network" id="networkSelect">
-            <option value="mainnet" {% if request.args.get('network') == 'mainnet' %}selected{% endif %}>Mainnet</option>
-            <option value="testnet" {% if request.args.get('network') == 'testnet' %}selected{% endif %}>Testnet</option>
-            <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
-          </select>
-        </span>
-        <span>
-          <label for="cors">CORS:</label>
-          <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
-        </span>
-        <span>
-          <label for="onion">Onion:</label>
-          <input type="checkbox" name="onion" id="onion" {% if request.args.get('onion') == 'on' %}checked{% endif %}>
-        </span>
-        <span>
-          <label for="i2p">I2P:</label>
-          <input type="checkbox" name="i2p" id="i2p" {% if request.args.get('i2p') == 'on' %}checked{% endif %}>
-        </span>
-        <span>
-          <input type="submit" value="Filter" class="pure-button pure-pink">
-        </span>
-        <span>
-          <a href="/"><input type="button" value="Reset" class="pure-button pure-grey"></a>
-        </span>
-      </form>
-    </div>
-
-    {% if nodes %}
-    <div class="xmrnodes">
+    {% if (nodes | length) == 0 %}
+      <div class="section">
+        <h1 class="title is-5">No nodes in the database yet...</h1>
+      </div>
+    {% else %}
+    <div>
+      <h1 class="title">Nodes</h1>
       <p class="">
         {% if web_compatible %}
           <div class="notification is-info is-light" id="webCompat">
@@ -76,7 +86,7 @@
             The more nodes there are running with these settings the more robust web clients will be in the future.
           </div>
         {% endif %}
-        <a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
+        <!-- <a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br /> -->
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
@@ -88,11 +98,18 @@
         <a href="{{ request.path }}?{{ request.args | pop_arg('all') }}">Show Active</a>
         {% endif %}
       </p>
+
+      {% for country in countries %}
+        <span class="tag is-dark">
+          <span class="fflag fflag-{{ country }} ff-md m-4" title="{{ country }}"></span>
+          {{ country }}
+          ({{ countries[country] }})
+        </span>
+      {% endfor %}
+
       <br>
       <div>
-           
         <div class="columns">
-
           <div class="column">
             {% for node in nodes %}
             <div class="card">
@@ -200,17 +217,9 @@
               </a>
             </article>
           </div>
-
         </div>
-
-      
-        
-        <!-- </tbody>
-      </table> -->
       </div>
     </div>
-    {% else %}
-      <p class="center">No nodes in the database yet...</p>
     {% endif %}
   </div>
 

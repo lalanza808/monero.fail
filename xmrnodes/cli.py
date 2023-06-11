@@ -79,14 +79,14 @@ def check_node(_node):
         node.datetime_checked = now
         node.save()
         hc.save()
-    if (
-        node.get_failed_checks().count() == node.get_all_checks().count()
-        and node.get_all_checks().count() > 5
-    ):
-        print("this node fails all of its health checks - deleting it!")
-        for _hc in node.get_all_checks():
-            _hc.delete_instance()
-        node.delete_instance()
+    # if (
+    #     node.get_failed_checks().count() == node.get_all_checks().count()
+    #     and node.get_all_checks().count() > 5
+    # ):
+    #     print("this node fails all of its health checks - deleting it!")
+    #     for _hc in node.get_all_checks():
+    #         _hc.delete_instance()
+    #     node.delete_instance()
 
 
 @bp.cli.command("get_peers")

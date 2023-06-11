@@ -5,6 +5,10 @@ body {
     font-size: 14px;
 }
 
+.checkbox:hover, .radio:hover {
+    color: #f9f9f9;
+}
+
 .media-content .title {
     color: #1B2432;
 }
@@ -59,7 +63,7 @@ body {
 }
 
 #addNodeForm {
-    width: 50%;
+    width: 80%;
 }
 
 #webCompat {

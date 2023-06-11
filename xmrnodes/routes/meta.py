@@ -55,6 +55,15 @@ def index():
     nodes = [n for n in nodes]
     shuffle(nodes)
 
+    countries = {}
+    for node in nodes:
+        c = node.country_code
+        if c is None:
+            c = '??'
+        if c not in countries:
+            countries[c] = 0
+        countries[c] += 1
+
     return render_template(
         "index.html",
         nodes=nodes,
@@ -64,6 +73,7 @@ def index():
         crypto=crypto,
         form=form,
         web_compatible=web_compatible,
+        countries=countries
     )
 
 
