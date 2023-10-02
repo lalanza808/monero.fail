@@ -92,9 +92,12 @@ def rw_cache(key_name, data=None):
             f.write(pickle.dumps(data))
             return data
     else:
-        with open(pickle_file, "rb") as f:
-            pickled_data = pickle.load(f)
-            return pickled_data
+        try:
+            with open(pickle_file, "rb") as f:
+                pickled_data = pickle.load(f)
+                return pickled_data
+        except:
+            return {}
 
 
 def retrieve_peers(host, port):

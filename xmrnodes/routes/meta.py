@@ -65,10 +65,16 @@ def index():
 def map():
     try:
         peers = rw_cache("map_peers")
+        nodes = Node.select().where(Node.datetime_checked)
     except:
         flash("Couldn't load the map. Try again later.")
         return redirect("/")
-    return render_template("map.html", peers=peers, source_node=config.NODE_HOST)
+    return render_template(
+        "map.html", 
+        peers=peers, 
+        nodes=nodes,
+        source_node=config.NODE_HOST
+    )
 
 
 @bp.route("/about")

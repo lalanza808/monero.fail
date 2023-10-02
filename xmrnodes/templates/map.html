@@ -56,14 +56,14 @@
 {% endwith %}
 
 <div class="center info">
-  <p>Peers seen ~24 hours: {{ peers | length }}</p>
+  <p>Peers seen ~2 weeks: {{ peers | length }}</p>
   <p>Source Node: {{ source_node }}</p>
   <p>
     This is not a full representation of the entire Monero network,
     just a look into the peers being recursively crawled from the source node ({{ source_node }}).
-    New peers are searched for once per day.
+    New peers are searched for once per week on average.
     Older peers are shown as more transparent and will be removed 
-    if not seen again after {{ config.PEER_LIFETIME }} hours.
+    if not seen again after some time.
   </p>
   <br>
   <a href="/">Go home</a>
@@ -95,8 +95,42 @@
    })
  });
 
- {% for peer in peers %}
+ {% for peer in nodes %}
+   {% if peer.datetime_checked | hours_elapsed > 24 %}
+      {% set fill_color = 'rgba(1,1,45,.2)' %}
+   {% elif peer.datetime_checked | hours_elapsed > 16 %}
+      {% set fill_color = 'rgba(1,1,45,.4)' %}
+   {% elif peer.datetime_checked | hours_elapsed > 8 %}
+      {% set fill_color = 'rgba(1,1,45,.6)' %}
+   {% elif peer.datetime_checked | hours_elapsed > 4 %}
+      {% set fill_color = 'rgba(1,1,45,.8)' %}
+   {% else %}
+      {% set fill_color = 'rgba(1,1,45,1)' %}
+   {% endif %}
+   var feature = new ol.Feature(
+       new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
+   );
+   feature.description = [
+     'Node {{ peer.url }}',
+     'Last seen {{ peer.datetime_checked | humanize }}'
+   ];
+   feature.setStyle(new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 6,
+            fill: new ol.style.Fill({
+                color: '{{ fill_color }}',
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#fff',
+                width: 1
+            })
+        })
+    })
+  );
+  markerLayer.getSource().addFeature(feature);
+ {% endfor %}
 
+ {% for peer in peers %}
    {% if peer.datetime | hours_elapsed > 24 %}
       {% set fill_color = 'rgba(238,111,45,.2)' %}
    {% elif peer.datetime | hours_elapsed > 16 %}
