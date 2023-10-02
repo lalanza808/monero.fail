@@ -19,7 +19,7 @@ MarkupSafe==2.1.2
 maxminddb==2.2.0
 multidict==6.0.4
 peewee==3.16.0
-py-levin==0.1.0
+py-levin @ git+https://github.com/sanderfoobar/py-levin
 PySocks==1.7.1
 python-dateutil==2.8.2
 python-dotenv==1.0.0

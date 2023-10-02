@@ -49,7 +49,7 @@ I accomplish this via `crontab` and some management scripts. Ensure the i2p and 
 docker-compose up -d
 ./manage.sh validate
 ./manage.sh check
-./manace.sh get_peers
+./manage.sh get_peers
 ```
 
 ### Production
