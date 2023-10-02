@@ -85,7 +85,7 @@
         </strong>
         <br><br>
         {% endif %}
-        <a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a><br /><br />
+        <a href="https://github.com/lalanza808/docker-monero-node" target="_blank">Run Your Own Node</a><br /><br />
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
@@ -96,6 +96,7 @@
         {% else %}
         <a href="{{ request.path }}?{{ request.args | pop_arg('all') }}">Show Active</a>
         {% endif %}
+        <br /><br /><a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a>
       </p>
       <br>
       <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">
