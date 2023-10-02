@@ -22,6 +22,7 @@ then
       --daemon \
       --log-file $BASE/gunicorn.log \
       --pid $BASE/gunicorn.pid \
+      --workers 3 \
       --reload
     sleep 2
     echo "Started gunicorn on 127.0.0.1:4000 with pid $(cat $BASE/gunicorn.pid)"
