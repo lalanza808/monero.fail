@@ -27,6 +27,11 @@
 
  <body>
 
+  <div id="donateBanner" style="text-align: center; background-color: rgba(255, 183, 195, .75);">
+    <h1 style="font-size: 12px; padding: 4px; margin: 0;">Please consider donating to fund hosting bills, development, and maintenance time:</h1>
+    <p style="font-size: 14px; padding: 0 0 4px 0; margin: 0; user-select: all; word-wrap: anywhere;">{{ config.DONATE_ADDRESS }}</p>
+  </div>
+
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flashes pure-u-1 center">
