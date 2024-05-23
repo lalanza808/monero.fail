@@ -9,7 +9,7 @@ from flask import Blueprint
 from urllib.parse import urlparse
 
 from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
-from xmrnodes.helpers import retrieve_peers, rw_cache, get_highest_block, get_geoip
+from xmrnodes.helpers import retrieve_peers, get_highest_block, get_geoip
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
@@ -146,8 +146,6 @@ def _get_peers():
         print(f"[+] Found {len(peers_to_scan)} initial peers to begin scraping.")
         for peer in peers_to_scan:
             upsert_peer(peer)
-    
-    # rw_cache("map_peers", list(Peer.select().execute()))
 
 @bp.cli.command("get_peers")
 def get_peers():

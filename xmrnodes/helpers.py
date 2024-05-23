@@ -83,23 +83,6 @@ def is_onion(url: str):
     else:
         return False
 
-
-# Use hacky filesystem cache since i dont feel like shipping redis
-def rw_cache(key_name, data=None):
-    pickle_file = path.join(config.DATA_DIR, f"{key_name}.pkl")
-    if data:
-        with open(pickle_file, "wb") as f:
-            f.write(pickle.dumps(data))
-            return data
-    else:
-        try:
-            with open(pickle_file, "rb") as f:
-                pickled_data = pickle.load(f)
-                return pickled_data
-        except:
-            return {}
-
-
 def retrieve_peers(host, port):
     try:
         sock = socket.socket()

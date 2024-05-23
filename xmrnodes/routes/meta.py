@@ -5,7 +5,7 @@ from flask import request, redirect, Blueprint
 from flask import render_template, flash, Response
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import rw_cache, get_highest_block
+from xmrnodes.helpers import get_highest_block
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, Peer
 from xmrnodes import config
