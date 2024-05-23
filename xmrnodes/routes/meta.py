@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from xmrnodes.helpers import rw_cache, get_highest_block
 from xmrnodes.forms import SubmitNode
-from xmrnodes.models import Node
+from xmrnodes.models import Node, Peer
 from xmrnodes import config
 
 bp = Blueprint("meta", "meta")
@@ -64,7 +64,7 @@ def index():
 @bp.route("/map")
 def map():
     try:
-        peers = rw_cache("map_peers")
+        peers = Peer.select()
         nodes = Node.select().where(Node.datetime_checked)
     except:
         flash("Couldn't load the map. Try again later.")

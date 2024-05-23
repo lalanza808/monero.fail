@@ -19,8 +19,8 @@
      <meta name="application-name" content="XMR Nodes">
      <meta name="msapplication-TileColor" content="#da532c">
      <meta name="keywords" content="wownero, monero, xmr, bitmonero, cryptocurrency">
-     <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" type="text/css">
+     <link rel="preload stylesheet" href="//cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+     <link rel="preload stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" type="text/css">
      <style>
        .map {
          height: 600px;
@@ -56,139 +56,150 @@
 {% endwith %}
 
 <div class="center info">
-  <p>Peers seen ~2 weeks: {{ peers | length }}</p>
+  <p>Recent Peers: {{ peers | length }}</p>
   <p>Source Node: {{ source_node }}</p>
   <p>
     This is not a full representation of the entire Monero network,
     just a look into the peers being recursively crawled from the source node ({{ source_node }}).
-    New peers are searched for once per week on average.
-    Older peers are shown as more transparent and will be removed 
-    if not seen again after some time.
+    New peers are searched every hour and unresponsive nodes are removed.
   </p>
   <br>
   <a href="/">Go home</a>
 </div>
-<div id="map" class="map"></div>
+<div id="map" class="map">
+  <div id="loadingContainer" style="width: 100%; text-align: center;">
+    <img id="loading" src="/static/images/helping.gif" style="width: 30%;" />
+  </div>
+</div>
 <div id="popup" class="popup" title="Welcome to OpenLayers"></div>
 
 <script>
- // Marker layer
- markerLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({
-      features: [],
-      projection: 'EPSG:3857'
-    })
-  });
+  function loadMap() {
 
- // Create the map
- var map = new ol.Map({
-   target: 'map',
-   layers: [
-     new ol.layer.Tile({
-       source: new ol.source.OSM()
-     }),
-     markerLayer
-   ],
-   view: new ol.View({
-     center: ol.proj.fromLonLat([0, 25]),
-     zoom: 1
-   })
- });
+    // Marker layer
+    markerLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({
+        features: [],
+        projection: 'EPSG:3857'
+      })
+    });
 
- {% for peer in nodes %}
-   {% if peer.datetime_checked | hours_elapsed > 24 %}
+    // Create the map
+    var map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        markerLayer
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([0, 25]),
+        zoom: 1
+      })
+    });
+
+    {% for peer in nodes %}
+    {% if peer.datetime_checked | hours_elapsed > 24 %}
       {% set fill_color = 'rgba(1,1,45,.2)' %}
-   {% elif peer.datetime_checked | hours_elapsed > 16 %}
+    {% elif peer.datetime_checked | hours_elapsed > 16 %}
       {% set fill_color = 'rgba(1,1,45,.4)' %}
-   {% elif peer.datetime_checked | hours_elapsed > 8 %}
+    {% elif peer.datetime_checked | hours_elapsed > 8 %}
       {% set fill_color = 'rgba(1,1,45,.6)' %}
-   {% elif peer.datetime_checked | hours_elapsed > 4 %}
+    {% elif peer.datetime_checked | hours_elapsed > 4 %}
       {% set fill_color = 'rgba(1,1,45,.8)' %}
-   {% else %}
+    {% else %}
       {% set fill_color = 'rgba(1,1,45,1)' %}
-   {% endif %}
-   var feature = new ol.Feature(
-       new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
-   );
-   feature.description = [
-     'Node {{ peer.url }}',
-     'Last seen {{ peer.datetime_checked | humanize }}'
-   ];
-   feature.setStyle(new ol.style.Style({
-        image: new ol.style.Circle({
-            radius: 6,
-            fill: new ol.style.Fill({
-                color: '{{ fill_color }}',
-            }),
-            stroke: new ol.style.Stroke({
-                color: '#fff',
-                width: 1
-            })
+    {% endif %}
+    var feature = new ol.Feature(
+      new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
+    );
+    feature.description = [
+      'Node {{ peer.url }}',
+      'Last seen {{ peer.datetime_checked | humanize }}'
+    ];
+    feature.setStyle(new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 6,
+        fill: new ol.style.Fill({
+          color: '{{ fill_color }}',
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#fff',
+          width: 1
         })
-    })
-  );
-  markerLayer.getSource().addFeature(feature);
- {% endfor %}
+      })
+    }));
+    markerLayer.getSource().addFeature(feature);
+    {% endfor %}
 
- {% for peer in peers %}
-   {% if peer.datetime | hours_elapsed > 24 %}
+    {% for peer in peers %}
+    {% if peer.datetime | hours_elapsed > 24 %}
       {% set fill_color = 'rgba(238,111,45,.2)' %}
-   {% elif peer.datetime | hours_elapsed > 16 %}
+    {% elif peer.datetime | hours_elapsed > 16 %}
       {% set fill_color = 'rgba(238,111,45,.4)' %}
-   {% elif peer.datetime | hours_elapsed > 8 %}
+    {% elif peer.datetime | hours_elapsed > 8 %}
       {% set fill_color = 'rgba(238,111,45,.6)' %}
-   {% elif peer.datetime | hours_elapsed > 4 %}
+    {% elif peer.datetime | hours_elapsed > 4 %}
       {% set fill_color = 'rgba(238,111,45,.8)' %}
-   {% else %}
+    {% else %}
       {% set fill_color = 'rgba(238,111,45,1)' %}
-   {% endif %}
-   var feature = new ol.Feature(
-       new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
-   );
-   feature.description = [
-     'Peer {{ peer.url }}',
-     'Last seen {{ peer.datetime | humanize }}'
-   ];
-   feature.setStyle(new ol.style.Style({
-        image: new ol.style.Circle({
-            radius: 6,
-            fill: new ol.style.Fill({
-                color: '{{ fill_color }}',
-            }),
-            stroke: new ol.style.Stroke({
-                color: '#fff',
-                width: 1
-            })
+    {% endif %}
+    var feature = new ol.Feature(
+      new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
+    );
+    feature.description = [
+      'Peer {{ peer.url }}',
+      'Last seen {{ peer.datetime | humanize }}'
+    ];
+    feature.setStyle(new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 6,
+        fill: new ol.style.Fill({
+          color: '{{ fill_color }}',
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#fff',
+          width: 1
         })
-    })
-  );
-  markerLayer.getSource().addFeature(feature);
- {% endfor %}
+      })
+    }));
+    markerLayer.getSource().addFeature(feature);
+    {% endfor %}
 
-  // Setup popup
-  var popup = new ol.Overlay({
-    element: $('#popup')[0],
-  });
-  map.addOverlay(popup);
+    // Setup popup
+    var popup = new ol.Overlay({
+      element: $('#popup')[0],
+    });
+    map.addOverlay(popup);
 
-  // Show details on each pixel
-  map.on("click", function(e) {
+    // Show details on each pixel
+    map.on("click", function(e) {
       var element = popup.getElement();
       $(element).popover('dispose')
       map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
-          var coordinate = e.coordinate;
-          $(element).popover('dispose');
-          popup.setPosition(coordinate);
-          element.title = feature.description[0]
-          $(element).popover({
-            container: element,
-            placement: 'top',
-            animation: false,
-            html: true,
-            content: '<p>' + feature.description[1] + '</p>',
-          });
-          $(element).popover('show');
+        var coordinate = e.coordinate;
+        $(element).popover('dispose');
+        popup.setPosition(coordinate);
+        element.title = feature.description[0]
+        $(element).popover({
+          container: element,
+          placement: 'top',
+          animation: false,
+          html: true,
+          content: '<p>' + feature.description[1] + '</p>',
+        });
+        $(element).popover('show');
       });
+    });
+
+    // Remove loader
+    document.getElementById('loadingContainer').remove();
+  }
+
+  // Wait for full load
+  addEventListener("DOMContentLoaded", (event) => {
+    setTimeout(loadMap, 1000);
   });
 </script>
 
