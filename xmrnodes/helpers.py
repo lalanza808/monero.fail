@@ -102,13 +102,11 @@ def rw_cache(key_name, data=None):
 
 def retrieve_peers(host, port):
     try:
-        print(f"[.] Connecting to {host}:{port}")
         sock = socket.socket()
         sock.settimeout(5)
         sock.connect((host, int(port)))
-    except:
-        sys.stderr.write("unable to connect to %s:%d\n" % (host, int([port])))
-        sys.exit()
+    except Exception as e:
+        return None
 
     bucket = Bucket.create_handshake_request()
 
@@ -121,11 +119,9 @@ def retrieve_peers(host, port):
     while 1:
         buffer = sock.recv(8)
         if not buffer:
-            sys.stderr.write("Invalid response; exiting\n")
             break
 
         if not buffer.startswith(bytes(LEVIN_SIGNATURE)):
-            sys.stderr.write("Invalid response; exiting\n")
             break
 
         bucket = Bucket.from_buffer(signature=buffer, sock=sock)

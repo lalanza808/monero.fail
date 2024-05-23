@@ -61,6 +61,14 @@ class Peer(Model):
     lon = FloatField(null=True)
     datetime = DateTimeField(default=datetime.utcnow)
 
+    @property
+    def port(self):
+        return urlparse(self.url).port
+
+    @property
+    def hostname(self):
+        return urlparse(self.url).hostname
+
     def hours_elapsed(self):
         now = datetime.utcnow()
         diff = now - self.datetime
