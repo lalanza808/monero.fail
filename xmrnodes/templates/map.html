@@ -56,7 +56,7 @@
 {% endwith %}
 
 <div class="center info">
-  <p>Recent Peers: {{ peers | length }}</p>
+  <p>Recent Peers: {{ recent_peers }}</p>
   <p>Source Node: {{ source_node }}</p>
   <p>
     This is not a full representation of the entire Monero network,
@@ -89,7 +89,8 @@
       target: 'map',
       layers: [
         new ol.layer.Tile({
-          source: new ol.source.OSM()
+          source: new ol.source.OSM(),
+          preload: 4
         }),
         markerLayer
       ],
@@ -99,73 +100,43 @@
       })
     });
 
-    {% for peer in nodes %}
-    {% if peer.datetime_checked | hours_elapsed > 24 %}
-      {% set fill_color = 'rgba(1,1,45,.2)' %}
-    {% elif peer.datetime_checked | hours_elapsed > 16 %}
-      {% set fill_color = 'rgba(1,1,45,.4)' %}
-    {% elif peer.datetime_checked | hours_elapsed > 8 %}
-      {% set fill_color = 'rgba(1,1,45,.6)' %}
-    {% elif peer.datetime_checked | hours_elapsed > 4 %}
-      {% set fill_color = 'rgba(1,1,45,.8)' %}
-    {% else %}
-      {% set fill_color = 'rgba(1,1,45,1)' %}
-    {% endif %}
-    var feature = new ol.Feature(
-      new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
-    );
-    feature.description = [
-      'Node {{ peer.url }}',
-      'Last seen {{ peer.datetime_checked | humanize }}'
-    ];
-    feature.setStyle(new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: 6,
-        fill: new ol.style.Fill({
-          color: '{{ fill_color }}',
-        }),
-        stroke: new ol.style.Stroke({
-          color: '#fff',
-          width: 1
-        })
+    
+    fetch('?fetch=1')
+      .then((response) => response.json())
+      .then((data) => {
+        let total = data.total;
+        for(i=0;i<total+1;i++) {
+          fetch(`?fetch=1&offset=${i}`)
+            .then((res) => res.json())
+            .then((d) => {
+              setTimeout(function() {
+                for (var url in d.peers) {
+                  let peer = d.peers[url];
+                  var feature = new ol.Feature(
+                    new ol.geom.Point(ol.proj.transform([peer.lon, peer.lat], 'EPSG:4326', 'EPSG:3857'))
+                  );
+                  feature.description = [
+                    `Node ${url}`,
+                    `Last Seen ${peer.last_seen}`
+                  ];
+                  feature.setStyle(new ol.style.Style({
+                    image: new ol.style.Circle({
+                      radius: 6,
+                      fill: new ol.style.Fill({
+                        color: peer.rgba,
+                      }),
+                      stroke: new ol.style.Stroke({
+                        color: '#fff',
+                        width: 1
+                      })
+                    })
+                  }));
+                  markerLayer.getSource().addFeature(feature);
+                }
+              }, 400)
+            })
+        }
       })
-    }));
-    markerLayer.getSource().addFeature(feature);
-    {% endfor %}
-
-    {% for peer in peers %}
-    {% if peer.datetime | hours_elapsed > 24 %}
-      {% set fill_color = 'rgba(238,111,45,.2)' %}
-    {% elif peer.datetime | hours_elapsed > 16 %}
-      {% set fill_color = 'rgba(238,111,45,.4)' %}
-    {% elif peer.datetime | hours_elapsed > 8 %}
-      {% set fill_color = 'rgba(238,111,45,.6)' %}
-    {% elif peer.datetime | hours_elapsed > 4 %}
-      {% set fill_color = 'rgba(238,111,45,.8)' %}
-    {% else %}
-      {% set fill_color = 'rgba(238,111,45,1)' %}
-    {% endif %}
-    var feature = new ol.Feature(
-      new ol.geom.Point(ol.proj.transform(['{{ peer.lon }}', '{{ peer.lat }}'], 'EPSG:4326', 'EPSG:3857'))
-    );
-    feature.description = [
-      'Peer {{ peer.url }}',
-      'Last seen {{ peer.datetime | humanize }}'
-    ];
-    feature.setStyle(new ol.style.Style({
-      image: new ol.style.Circle({
-        radius: 6,
-        fill: new ol.style.Fill({
-          color: '{{ fill_color }}',
-        }),
-        stroke: new ol.style.Stroke({
-          color: '#fff',
-          width: 1
-        })
-      })
-    }));
-    markerLayer.getSource().addFeature(feature);
-    {% endfor %}
 
     // Setup popup
     var popup = new ol.Overlay({
@@ -199,7 +170,7 @@
 
   // Wait for full load
   addEventListener("DOMContentLoaded", (event) => {
-    setTimeout(loadMap, 1000);
+    setTimeout(loadMap, 1500);
   });
 </script>
 

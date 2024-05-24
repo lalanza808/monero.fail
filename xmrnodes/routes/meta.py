@@ -1,6 +1,8 @@
 import re
 from random import shuffle
+from math import ceil
 
+import arrow
 from flask import request, redirect, Blueprint
 from flask import render_template, flash, Response
 from urllib.parse import urlparse
@@ -63,16 +65,36 @@ def index():
 
 @bp.route("/map")
 def map():
-    try:
-        peers = Peer.select()
-        nodes = Node.select().where(Node.datetime_checked)
-    except:
-        flash("Couldn't load the map. Try again later.")
-        return redirect("/")
+    fetch = request.args.get("fetch")
+    if fetch:
+        _peers = {}
+        next = None
+        limit = 100
+        rgb = "238,111,45"
+        offset = request.args.get("offset", 0)
+        offset = int(offset)
+        peers = Peer.select().order_by(Peer.datetime.asc())
+        paginated_peers = peers.paginate(offset, limit)
+        total = ceil(peers.count() / limit)
+        if offset < total:
+            next = offset + 1
+        for peer in paginated_peers:
+            opacity = 1 - (peer.hours_elapsed() / 100)
+            _peers[peer.url] = {
+                "rgba": f"rgba({rgb},{opacity})",
+                "lat": peer.lat,
+                "lon": peer.lon,
+                "last_seen": arrow.get(peer.datetime).humanize()
+            }
+        return {
+            "offset": offset,
+            "next": next,
+            "total": total,
+            "peers": _peers
+        }
     return render_template(
-        "map.html", 
-        peers=peers, 
-        nodes=nodes,
+        "map.html",
+        recent_peers=Peer.select().count(),
         source_node=config.NODE_HOST
     )
 
