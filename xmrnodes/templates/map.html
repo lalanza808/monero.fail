@@ -74,7 +74,50 @@
 <div id="popup" class="popup" title="Welcome to OpenLayers"></div>
 
 <script>
-  function loadMap() {
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function fetchWithDelay(total, delayMs) {
+    for(let i=0; i < total + 1; i++) {
+      console.log(`Fetching page ${i}`)
+      try {
+        await fetch(`?fetch=1&offset=${i}`)
+          .then((res) => res.json())
+          .then((d) => {
+            for (var url in d.peers) {
+              let peer = d.peers[url];
+              var feature = new ol.Feature(
+                new ol.geom.Point(ol.proj.transform([peer.lon, peer.lat], 'EPSG:4326', 'EPSG:3857'))
+              );
+              feature.description = [
+                `Node ${url}`,
+                `Last Seen ${peer.last_seen}`
+              ];
+              feature.setStyle(new ol.style.Style({
+                image: new ol.style.Circle({
+                  radius: 6,
+                  fill: new ol.style.Fill({
+                    color: peer.rgba,
+                  }),
+                  stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 1
+                  })
+                })
+              }));
+              markerLayer.getSource().addFeature(feature);
+            }
+          })
+      } catch (err) {
+        console.error(`Error on request ${i}`);
+      }
+      await delay(delayMs);
+    }
+  }
+
+  async function loadMap() {
 
     // Marker layer
     markerLayer = new ol.layer.Vector({
@@ -101,42 +144,10 @@
     });
 
     
-    fetch('?fetch=1')
-      .then((response) => response.json())
-      .then((data) => {
-        let total = data.total;
-        for(i=0;i<total+1;i++) {
-          fetch(`?fetch=1&offset=${i}`)
-            .then((res) => res.json())
-            .then((d) => {
-              setTimeout(function() {
-                for (var url in d.peers) {
-                  let peer = d.peers[url];
-                  var feature = new ol.Feature(
-                    new ol.geom.Point(ol.proj.transform([peer.lon, peer.lat], 'EPSG:4326', 'EPSG:3857'))
-                  );
-                  feature.description = [
-                    `Node ${url}`,
-                    `Last Seen ${peer.last_seen}`
-                  ];
-                  feature.setStyle(new ol.style.Style({
-                    image: new ol.style.Circle({
-                      radius: 6,
-                      fill: new ol.style.Fill({
-                        color: peer.rgba,
-                      }),
-                      stroke: new ol.style.Stroke({
-                        color: '#fff',
-                        width: 1
-                      })
-                    })
-                  }));
-                  markerLayer.getSource().addFeature(feature);
-                }
-              }, 400)
-            })
-        }
-      })
+    const res = await fetch('?fetch=1')
+      .then((res) => res.json())
+    console.log(`Found ${res.total} pages of peers to fetch`)
+    fetchWithDelay(res.total, 1500);
 
     // Setup popup
     var popup = new ol.Overlay({
