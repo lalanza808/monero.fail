@@ -69,7 +69,7 @@ def map():
     if fetch:
         _peers = {}
         next = None
-        limit = 400
+        limit = 500
         rgb = "238,111,45"
         offset = request.args.get("offset", 0)
         offset = int(offset)
