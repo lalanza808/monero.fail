@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <meta name="HandheldFriendly" content="True">
+     <meta name="MobileOptimized" content="320">
+     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
+     <meta property="fb:app_id" content="0" />
+     <meta property="og:image" content="https://www.getmonero.org/press-kit/symbols/monero-symbol-on-white-480.png" />
+     <meta property="og:description" content="xmrnodes" />
+     <meta property="og:url" content="https://monero.fail" />
+     <meta property="og:title" content="XMR Nodes" />
+     <meta property="og:type" content="website" />
+     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+     <meta name="theme-color" content="#ffffff">
+     <meta name="apple-mobile-web-app-title" content="XMR Nodes">
+     <meta name="application-name" content="XMR Nodes">
+     <meta name="msapplication-TileColor" content="#da532c">
+     <meta name="keywords" content="wownero, monero, xmr, bitmonero, cryptocurrency">
+     <link href="/static/css/normalize.css" rel="stylesheet">
+     <link href="/static/css/pure.css" rel="stylesheet">
+     <link href="/static/css/style.css" rel="stylesheet">
+     <title>XMR Nodes</title>
+ </head>
+ <body>
+
+    <div class="container">
+        <h1>OpSec for Monero Users</h1>
+
+        <p>
+            Chain analysis firms and law enforcement entities are observing the blockchain with spy nodes which log IP addresses. Safeguards such as Dandelion++ intended to mitigate this are not fool-proof. Swap services and exchanges comply with these agencies and provide additional metadata such as IP addresses, transaction hashes, and transaction amounts. Exchanges enforce KYC anyways, you're already identified there.
+        </p>
+
+        <p>
+            Additionally, these entities are "poisoning" wallets by sending tainted UTXOs - transactions which can allow them to monitor activity with a high degree of confidence. Look at following image:
+        </p>
+
+        <img src="/static/images/tainted_utxos.png" />
+
+        <p>
+            This is the donation wallet address I have hosted on the front page of this site.
+            It has received several tiny transactions which are very likely tainted UTXOs intended to monitor my wallet activity.
+            If I were to spend Monero and it ends up in a wallet controlled by a compliant entity then the additional metadata would confirm that the transaction came from my wallet.
+            Other metadata could be combined to de-anonymize my identity.
+            My activity can more or less be "traced" if I'm not careful.
+        </p>
+
+        <h2>Mitigation</h2>
+        <p>
+            Here are the best things you can do to mitigate surveillance and protect your financial privacy:
+        </p>
+
+        <ol>
+            <li>Run your own monero node with tx-proxy enabled: <a href="https://github.com/monero-project/monero/blob/master/docs/ANONYMITY_NETWORKS.md" target="_blank">instructions</a>. Always use your own node for any wallet spending.</li>
+            <li>Don't post your wallet address anywhere - if so, you can expect tainted outputs.</li>
+            <li>Use a wallet with "coin control" which allows you to specify UTXOs you want to include/exclude. Exclude tainted coins in any future spends.</li>
+            <li>Send the tainted outputs to your own address 2 or more times. The more times you do this the more it obfuscates the true sender and reduces tracing confidence.</li>
+            <li>Send tainted outputs to a donation address to some community thing such as <a href="https://ccs.getmonero.org/" target="_blank">CCS</a></li>
+        </ol>
+    </div>
+
+    <style>
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+    </style>
+
+</body>
