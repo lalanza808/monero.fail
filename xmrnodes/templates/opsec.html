@@ -27,6 +27,7 @@
  <body>
 
     <div class="container">
+        <a href="/">go back</a>
         <h1>OpSec for Monero Users</h1>
 
         <p>
@@ -34,37 +35,90 @@
         </p>
 
         <p>
-            Additionally, these entities are "poisoning" wallets by sending tainted UTXOs - transactions which can allow them to monitor activity with a high degree of confidence. Look at following image:
+            Additionally, these entities are "poisoning" wallets by sending tainted UTXOs - transactions which can allow them to monitor activity with a high degree of confidence if the user unknowingly spends them. Look at following image:
         </p>
 
-        <img src="/static/images/tainted_utxos.png" />
+        <img src="/static/images/tainted_utxos.png">
 
         <p>
             This is the donation wallet address I have hosted on the front page of this site.
             It has received several tiny transactions which are very likely tainted UTXOs intended to monitor my wallet activity.
             If I were to spend Monero and it ends up in a wallet controlled by a compliant entity then the additional metadata would confirm that the transaction came from my wallet.
             Other metadata could be combined to de-anonymize my identity.
-            My activity can more or less be "traced" if I'm not careful.
+            My activity can more or less be "traced" if I'm not careful to cover my metadata tracks.
         </p>
 
-        <h2>Mitigation</h2>
+        <p>
+            Read more about the discussions here: <a href="https://github.com/monero-project/meta/issues/1124" target="_blank">MRL Notes</a>
+        </p>
+
+        <h2>Recommendations</h2>
+        <p>
+            <a href="https://github.com/monero-project/monero/blob/master/docs/ANONYMITY_NETWORKS.md#privacy-limitations" target="_blank">Read this.</a>
+            <a href="https://www.youtube.com/watch?v=WkphgF6Hn4w" target="_blank">Watch this.</a>
+        </p>
         <p>
             Here are the best things you can do to mitigate surveillance and protect your financial privacy:
         </p>
 
         <ol>
-            <li>Run your own monero node with tx-proxy enabled: <a href="https://github.com/monero-project/monero/blob/master/docs/ANONYMITY_NETWORKS.md" target="_blank">instructions</a>. Always use your own node for any wallet spending.</li>
-            <li>Don't post your wallet address anywhere - if so, you can expect tainted outputs.</li>
-            <li>Use a wallet with "coin control" which allows you to specify UTXOs you want to include/exclude. Exclude tainted coins in any future spends.</li>
-            <li>Send the tainted outputs to your own address 2 or more times. The more times you do this the more it obfuscates the true sender and reduces tracing confidence.</li>
-            <li>Send tainted outputs to a donation address to some community thing such as <a href="https://ccs.getmonero.org/" target="_blank">CCS</a></li>
+            <li>
+                Run Tor and I2P proxies alongside your own monero node with <code>--tx-proxy</code> enabled: <a href="https://github.com/monero-project/monero/blob/master/docs/ANONYMITY_NETWORKS.md" target="_blank">instructions</a>. Always use your own node for any wallet spending.
+                <strong>Doing this ensures your transactions are always sent over anonymous networks and thus your IP won't be captured by listeners.</strong>
+            </li>
+            <li>
+                Be vigilant and check for the existence of unexpected transactions (typically very small) as potentially tainted outputs. <strong>If you end up with tainted outputs you have to go through a process to "weaken" them to reduce tracing probability and confidence).</strong>
+            </li>
+            <li>
+                Use a wallet with "coin control" which allows you to specify UTXOs you want to include/exclude. Exclude tainted coins in any future spends / include only coins you know exactly where they came from. I recommend <a href="https://featherwallet.org/" target="_blank">Feather Wallet</a>.
+            </li>
+            <li>
+                Consolidate the tainted outputs using coin control (send all of them to yourself in one transaction like the images below). Then once you have them in one output you send that to yourself a few times. The more times you do this the more it obfuscates the true sender and reduces tracing confidence.
+                <br />
+                <br />
+                <img src="/static/images/coin_sweep_outputs.png" width="400">
+                <img src="/static/images/coin_sweep.png" width="400">
+            </li>
+            <li>
+                Send tainted outputs to a donation address to some community thing such as <a href="https://ccs.getmonero.org/" target="_blank">CCS</a>
+            </li>
         </ol>
+
+        <h2>Running a Node</h2>
+
+        <p>
+            I run my node with the following command-line arguments (requires <a href="https://raw.githubusercontent.com/Boog900/monero-ban-list/main/ban_list.txt" target="_blank">this ban list at ~/ban_list.txt</a> and running Tor and I2P proxies).
+        </p>
+
+        <code>
+            monerod \<br />
+                --tx-proxy tor,127.0.0.1:9050,disable_noise \ <br />
+                --tx-proxy i2p,127.0.0.1:4444,disable_noise \ <br />
+                --enable-dns-blocklist \ <br />
+                --ban-list ~/ban_list.txt
+        </code>
+
+        <p>
+            Alternatively, I offer a full node Docker Compose option for those comfortable with running containers. It includes the proxy configurations as well as other helpful monitoring/observability features. <a href="https://github.com/lalanza808/docker-monero-node" target="_blank">docker-monero-node on Github</a>.
+        </p>
+
+        <a href="/">go back</a>
     </div>
 
     <style>
         .container {
             width: 80%;
             margin: 0 auto;
+            padding-bottom: 4em;
+        }
+        li {
+            margin-top: 12px;
+        }
+        code {
+            background-color: rgba(228, 228, 228, 0.5);
+        }
+        h2 {
+            padding-top: 1em;
         }
     </style>
 
