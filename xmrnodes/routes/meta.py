@@ -104,6 +104,11 @@ def about():
     return render_template("about.html")
 
 
+@bp.route("/opsec")
+def opsec():
+    return render_template("opsec.html")
+
+
 @bp.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":

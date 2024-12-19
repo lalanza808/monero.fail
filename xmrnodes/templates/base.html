@@ -27,10 +27,46 @@
 
  <body>
 
-  <div id="donateBanner" style="text-align: center; background-color: rgba(255, 183, 195, .75);">
+  <div id="warningBanner" class="banner">
+    <h1>
+      WARNING
+    </h1>
+    <p>
+      There has been an influx of malicious nodes hosted by chain analysis and government agencies which spy on Monero users.
+      Some of them may be in this list - it's impossible to know.
+      To best protect yourself from surveillance please use Tor or run your own node.
+      <br /><br />
+      To learn more about the surveillance issue, watch this video
+      <a href="https://www.youtube.com/watch?v=WkphgF6Hn4w" target="_blank">How Monero Users Get Traced</a>
+      <br />
+      To learn more on how to mitigate the surveillance, read this page: <a href="/opsec">Opsec</a>
+    </p>
+  </div>
+
+  <div id="donateBanner" class="banner">
     <h1 style="font-size: 12px; padding: 4px; margin: 0;">Please consider donating to fund hosting bills, development, and maintenance time:</h1>
     <p style="font-size: 14px; padding: 0 0 4px 0; margin: 0; user-select: all; word-wrap: anywhere;">{{ config.DONATE_ADDRESS }}</p>
   </div>
+
+  <style>
+    .banner {
+      text-align: center;
+    }
+    #donateBanner {
+      background-color: rgba(0, 183, 195, .35);
+      padding: .35em;
+    }
+    #warningBanner {
+      background-color: rgba(255, 0, 0, .7);
+      padding: .5em 2em .5em 2em;
+      margin: 0 auto;
+    }
+    #warningBanner p {
+      width: 60%;
+      margin: 0 auto;
+      padding-bottom: 18px;
+    }
+  </style>
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
