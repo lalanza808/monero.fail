@@ -81,7 +81,7 @@ def check_node(_node):
         hc.save()
     if (
         node.get_failed_checks().count() == node.get_all_checks().count()
-        and node.get_all_checks().count() > 5
+        and node.get_all_checks().count() > 50
     ):
         print("this node fails all of its health checks - deleting it!")
         for _hc in node.get_all_checks():
