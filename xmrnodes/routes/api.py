@@ -8,21 +8,24 @@ bp = Blueprint('api', 'api')
 @bp.route("/nodes.json")
 def nodes_json():
     nodes = Node.select().where(
-        Node.validated==True
-    ).where(
+        Node.validated==True,
+        Node.available==True,
         Node.nettype=="mainnet"
     )
     xmr_nodes = [n for n in nodes if n.crypto == "monero"]
     wow_nodes = [n for n in nodes if n.crypto == "wownero"]
     return jsonify({
         "monero": {
-            "clear": [n.url for n in xmr_nodes if n.is_tor == False],
+            "clear": [n.url for n in xmr_nodes if n.is_tor == False and n.is_i2p == False],
             "onion": [n.url for n in xmr_nodes if n.is_tor == True],
+            "i2p": [n.url for n in xmr_nodes if n.is_i2p == True],
             "web_compatible": [n.url for n in xmr_nodes if n.web_compatible == True],
         },
         "wownero": {
-            "clear": [n.url for n in wow_nodes if n.is_tor == False],
-            "onion": [n.url for n in wow_nodes if n.is_tor == True]
+            "clear": [n.url for n in wow_nodes if n.is_tor == False and n.is_i2p == False],
+            "onion": [n.url for n in wow_nodes if n.is_tor == True],
+            "i2p": [n.url for n in wow_nodes if n.is_i2p == True],
+            "web_compatible": [n.url for n in wow_nodes if n.web_compatible == True],
         }
     })
 
