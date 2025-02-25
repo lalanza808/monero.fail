@@ -407,6 +407,19 @@ wheels = [
 ]
 
 [[package]]
+name = "gunicorn"
+version = "23.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "importlib-metadata", marker = "python_full_version < '3.8'" },
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/72/9614c465dc206155d93eff0ca20d42e1e35afc533971379482de953521a4/gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec", size = 375031 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d", size = 85029 },
+]
+
+[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -531,6 +544,7 @@ dependencies = [
     { name = "flask" },
     { name = "flask-wtf" },
     { name = "geoip2" },
+    { name = "gunicorn" },
     { name = "py-levin" },
     { name = "python-dotenv" },
     { name = "requests" },
@@ -542,6 +556,7 @@ requires-dist = [
     { name = "flask", specifier = ">=2.2.5" },
     { name = "flask-wtf", specifier = ">=1.1.1" },
     { name = "geoip2", specifier = ">=4.7.0" },
+    { name = "gunicorn", specifier = ">=23.0.0" },
     { name = "py-levin", url = "https://github.com/lalanza808/py-levin/archive/refs/heads/master.zip" },
     { name = "python-dotenv", specifier = ">=0.21.1" },
     { name = "requests", specifier = ">=2.31.0" },
@@ -642,6 +657,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d8/00/fd6eef9830046c063939cbf119c101898cbb611ea20301ae911b74caca19/multidict-6.0.5-cp39-cp39-win32.whl", hash = "sha256:04da1bb8c8dbadf2a18a452639771951c662c5ad03aefe4884775454be322c9b", size = 25732 },
     { url = "https://files.pythonhosted.org/packages/58/a3/4d2c1b4d1859c89d9ce48a4ae410ee019485e324e484b0160afdba8cc42b/multidict-6.0.5-cp39-cp39-win_amd64.whl", hash = "sha256:d6f6d4f185481c9669b9447bf9d9cf3b95a0e9df9d169bbc17e363b7d5487755", size = 28181 },
     { url = "https://files.pythonhosted.org/packages/fa/a2/17e1e23c6be0a916219c5292f509360c345b5fa6beeb50d743203c27532c/multidict-6.0.5-py3-none-any.whl", hash = "sha256:0d63c74e3d7ab26de115c49bffc92cc77ed23395303d496eae515d4204a625e7", size = 9729 },
+]
+
+[[package]]
+name = "packaging"
+version = "24.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/b5/b43a27ac7472e1818c4bafd44430e69605baefe1f34440593e0332ec8b4d/packaging-24.0.tar.gz", hash = "sha256:eb82c5e3e56209074766e6885bb04b8c38a0c015d0a30036ebe7ece34c9989e9", size = 147882 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/df/1fceb2f8900f8639e278b056416d49134fb8d84c5942ffaa01ad34782422/packaging-24.0-py3-none-any.whl", hash = "sha256:2ddfb553fdf02fb784c234c7ba6ccc288296ceabec964ad2eae3777778130bc5", size = 53488 },
 ]
 
 [[package]]
