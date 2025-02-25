@@ -1,0 +1,18 @@
+[project]
+name = "monero-fail"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "arrow>=1.2.3",
+    "flask>=2.2.5",
+    "flask-wtf>=1.1.1",
+    "geoip2>=4.7.0",
+    "py-levin",
+    "python-dotenv>=0.21.1",
+    "requests>=2.31.0",
+]
+
+[tool.uv.sources]
+py-levin = { url = "https://github.com/lalanza808/py-levin/archive/refs/heads/master.zip" }
