@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import arrow
 from flask import Blueprint
 from urllib.parse import urlencode

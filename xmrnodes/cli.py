@@ -21,7 +21,7 @@ def init():
 
 @bp.cli.command("check")
 def check_nodes():
-    diff = datetime.utcnow() - timedelta(hours=72)
+    diff = datetime.now(tz=timezone.utc) - timedelta(hours=72)
     checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
     for check in checks:
         print("Deleting check", check.id)
@@ -42,7 +42,7 @@ def check_node(_node):
     if not node:
         print('node found')
         pass
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     hc = HealthCheck(node=node)
     logging.info(f"Attempting to check {node.url}")
     try:
@@ -89,7 +89,7 @@ def check_node(_node):
 def upsert_peer(peer):
     exists = Peer.select().where(Peer.url == peer).first()
     if exists:
-        exists.datetime = datetime.utcnow()
+        exists.datetime = datetime.now(tz=timezone.utc)
         exists.save()
     else:
         with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as geodb:
@@ -158,7 +158,7 @@ def get_peers():
 def validate():
     nodes = Node.select().where(Node.validated == False)
     for node in nodes:
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         logging.info(f"Attempting to validate {node.url}")
         try:
             r = make_request(node.url)

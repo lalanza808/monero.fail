@@ -70,7 +70,7 @@ class Peer(Model):
         return urlparse(self.url).hostname
 
     def hours_elapsed(self):
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         diff = now - self.datetime
         return diff.total_seconds() / 60 / 60
 
