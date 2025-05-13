@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 from datetime import datetime
 
-from peewee import *
+from peewee import AutoField, CharField, BooleanField, IntegerField, FloatField, DateTimeField, ForeignKeyField, Model
 from playhouse.sqliteq import SqliteQueueDatabase
 
 from xmrnodes import config
@@ -39,7 +39,7 @@ class Node(Model):
 
     def get_failed_checks(self):
         hcs = HealthCheck.select().where(
-            HealthCheck.node == self, HealthCheck.health == False
+            HealthCheck.node == self, HealthCheck.health is False
         )
         return hcs
 

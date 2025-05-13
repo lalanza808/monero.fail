@@ -1,9 +1,7 @@
 import logging
-from datetime import datetime, timedelta
-from time import sleep
+from datetime import datetime, timedelta, timezone
 
 import geoip2.database
-import arrow
 import requests
 from flask import Blueprint
 from urllib.parse import urlparse
@@ -28,7 +26,7 @@ def check_nodes():
     for check in checks:
         print("Deleting check", check.id)
         check.delete_instance()
-    nodes = Node.select().where(Node.validated == True)
+    nodes = Node.select().where(Node.validated is True)
     for node in nodes:
         try:
             check_node(node.url)
@@ -70,7 +68,7 @@ def check_node(_node):
                 logging.info("success")
         else:
             raise
-    except:
+    except Exception:
         logging.info("fail")
         node.datetime_failed = now
         node.available = False
@@ -108,7 +106,7 @@ def upsert_peer(peer):
                     lon=geodata.location.longitude,
                 )
                 p.save()
-            except Exception as e:
+            except Exception:
                 pass
 
 def _get_peers():
@@ -135,7 +133,7 @@ def _get_peers():
                     upsert_peer(new_peer)
             else:
                 raise Exception('dead node')
-        except Exception as e:
+        except Exception:
             print(f"--- Dead peer {peer.url}")
             peer.delete_instance()
 
@@ -158,7 +156,7 @@ def get_peers():
 
 @bp.cli.command("validate")
 def validate():
-    nodes = Node.select().where(Node.validated == False)
+    nodes = Node.select().where(Node.validated is False)
     for node in nodes:
         now = datetime.utcnow()
         logging.info(f"Attempting to validate {node.url}")
@@ -213,10 +211,10 @@ def validate():
 @bp.cli.command("export")
 def export():
     all_nodes = []
-    ts = int(arrow.get().timestamp())
+    ts = int(datetime.now(tz=timezone.utc).timestamp())
     export_dir = f"{config.DATA_DIR}/export.txt"
     export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
-    nodes = Node.select().where(Node.validated == True)
+    nodes = Node.select().where(Node.validated is True)
     for node in nodes:
         logging.info(f"Adding {node.url}")
         all_nodes.append(node.url)
@@ -241,6 +239,6 @@ def import_():
                 node = Node(url=n)
                 node.save()
                 all_nodes.append(n)
-            except:
+            except Exception:
                 pass
     logging.info(f"{len(all_nodes)} node urls imported and ready to be validated")
