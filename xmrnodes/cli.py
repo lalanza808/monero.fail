@@ -26,7 +26,7 @@ def check_nodes():
     for check in checks:
         print("Deleting check", check.id)
         check.delete_instance()
-    nodes = Node.select().where(Node.validated is True)
+    nodes = Node.select().where(Node.validated == True)
     for node in nodes:
         try:
             check_node(node.url)
@@ -156,7 +156,7 @@ def get_peers():
 
 @bp.cli.command("validate")
 def validate():
-    nodes = Node.select().where(Node.validated is False)
+    nodes = Node.select().where(Node.validated == False)
     for node in nodes:
         now = datetime.utcnow()
         logging.info(f"Attempting to validate {node.url}")
@@ -214,7 +214,7 @@ def export():
     ts = int(datetime.now(tz=timezone.utc).timestamp())
     export_dir = f"{config.DATA_DIR}/export.txt"
     export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
-    nodes = Node.select().where(Node.validated is True)
+    nodes = Node.select().where(Node.validated == True)
     for node in nodes:
         logging.info(f"Adding {node.url}")
         all_nodes.append(node.url)

@@ -39,7 +39,7 @@ class Node(Model):
 
     def get_failed_checks(self):
         hcs = HealthCheck.select().where(
-            HealthCheck.node == self, HealthCheck.health is False
+            HealthCheck.node == self, HealthCheck.health == False
         )
         return hcs
 

@@ -13,13 +13,6 @@ def humanize(d):
     return t.humanize()
 
 
-@bp.app_template_filter("hours_elapsed")
-def hours_elapsed(d):
-    now = datetime.utcnow()
-    diff = now - d
-    return diff.total_seconds() / 60 / 60
-
-
 @bp.app_template_filter("pop_arg")
 def trim_arg(all_args, arg_to_trim):
     d = all_args.to_dict()

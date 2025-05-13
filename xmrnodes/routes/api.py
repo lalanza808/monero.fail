@@ -8,24 +8,24 @@ bp = Blueprint('api', 'api')
 @bp.route("/nodes.json")
 def nodes_json():
     nodes = Node.select().where(
-        Node.validated is True,
-        Node.available is True,
+        Node.validated == True,
+        Node.available == True,
         Node.nettype=="mainnet"
     )
     xmr_nodes = [n for n in nodes if n.crypto == "monero"]
     wow_nodes = [n for n in nodes if n.crypto == "wownero"]
     return jsonify({
         "monero": {
-            "clear": [n.url for n in xmr_nodes if n.is_tor is False and n.is_i2p is False],
-            "onion": [n.url for n in xmr_nodes if n.is_tor is True],
-            "i2p": [n.url for n in xmr_nodes if n.is_i2p is True],
-            "web_compatible": [n.url for n in xmr_nodes if n.web_compatible is True],
+            "clear": [n.url for n in xmr_nodes if n.is_tor == False and n.is_i2p == False],
+            "onion": [n.url for n in xmr_nodes if n.is_tor == True],
+            "i2p": [n.url for n in xmr_nodes if n.is_i2p == True],
+            "web_compatible": [n.url for n in xmr_nodes if n.web_compatible == True],
         },
         "wownero": {
-            "clear": [n.url for n in wow_nodes if n.is_tor is False and n.is_i2p is False],
-            "onion": [n.url for n in wow_nodes if n.is_tor is True],
-            "i2p": [n.url for n in wow_nodes if n.is_i2p is True],
-            "web_compatible": [n.url for n in wow_nodes if n.web_compatible is True],
+            "clear": [n.url for n in wow_nodes if n.is_tor == False and n.is_i2p == False],
+            "onion": [n.url for n in wow_nodes if n.is_tor == True],
+            "i2p": [n.url for n in wow_nodes if n.is_i2p == True],
+            "web_compatible": [n.url for n in wow_nodes if n.web_compatible == True],
         }
     })
 
@@ -33,7 +33,7 @@ def nodes_json():
 def health_json():
     data = {}
     nodes = Node.select().where(
-        Node.validated is True
+        Node.validated == True
     )
     for node in nodes:
         if node.crypto not in data:
@@ -61,7 +61,7 @@ def health_json():
 @bp.route("/wow_nodes.json")
 def wow_nodes_json():
     nodes = Node.select().where(
-        Node.validated is True
+        Node.validated == True
     ).where(
         Node.nettype=="mainnet"
     ).where(
@@ -69,6 +69,6 @@ def wow_nodes_json():
     )
     nodes = [n for n in nodes]
     return jsonify({
-        "clear": [n.url for n in nodes if n.is_tor is False],
-        "onion": [n.url for n in nodes if n.is_tor is True]
+        "clear": [n.url for n in nodes if n.is_tor == False],
+        "onion": [n.url for n in nodes if n.is_tor == True]
     })

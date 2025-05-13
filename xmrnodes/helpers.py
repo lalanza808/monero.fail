@@ -4,7 +4,6 @@ import geoip2.database
 from requests import get as r_get
 from urllib.parse import urlparse
 from levin.bucket import Bucket
-# from levin.ctypes import *
 from levin.constants import LEVIN_SIGNATURE
 
 from xmrnodes.models import Node
@@ -128,7 +127,7 @@ def retrieve_peers(host, port):
 def get_highest_block(nettype, crypto):
     highest = (
         Node.select()
-        .where(Node.validated is True, Node.nettype == nettype, Node.crypto == crypto)
+        .where(Node.validated == True, Node.nettype == nettype, Node.crypto == crypto)
         .order_by(Node.last_height.desc())
         .limit(1)
         .first()

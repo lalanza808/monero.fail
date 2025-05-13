@@ -26,27 +26,28 @@ def index():
     web_compatible = request.args.get("cors", False)
     highest_block = get_highest_block(nettype, crypto)
     healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
+    print(highest_block)
 
     nodes = Node.select().where(
-        Node.validated is True, Node.nettype == nettype, Node.crypto == crypto
+        Node.validated == True, Node.nettype == nettype, Node.crypto == crypto
     )
 
     if web_compatible:
-        nodes = nodes.where(Node.web_compatible is True)
+        nodes = nodes.where(Node.web_compatible == True)
 
     nodes_all = nodes.count()
     nodes_unhealthy = nodes.where(
-        (Node.available is False) | (Node.last_height < healthy_block)
+        (Node.available == False) | (Node.last_height < healthy_block)
     ).count()
 
     if not show_all:
-        nodes = nodes.where(Node.available is True, Node.last_height > healthy_block)
+        nodes = nodes.where(Node.available == True, Node.last_height > healthy_block)
 
     nodes = nodes.order_by(Node.datetime_entered.desc())
     if onion:
-        nodes = nodes.where(Node.is_tor is True)
+        nodes = nodes.where(Node.is_tor == True)
     if i2p:
-        nodes = nodes.where(Node.is_i2p is True)
+        nodes = nodes.where(Node.is_i2p == True)
 
     nodes = [n for n in nodes]
     shuffle(nodes)
@@ -146,7 +147,7 @@ def haproxy():
     cors = request.args.get("cors") or False
     tor = request.args.get("onion") or False
     nodes = Node.select().where(
-        Node.validated is True,
+        Node.validated == True,
         Node.nettype == nettype,
         Node.crypto == crypto,
         Node.is_tor == tor,
