@@ -1,13 +1,9 @@
-import sys
 import socket
-import pickle
-from os import path
 
 import geoip2.database
 from requests import get as r_get
 from urllib.parse import urlparse
 from levin.bucket import Bucket
-from levin.ctypes import *
 from levin.constants import LEVIN_SIGNATURE
 
 from xmrnodes.models import Node
@@ -62,7 +58,7 @@ def determine_crypto(url):
                 crypto = c
                 break
         return crypto
-    except:
+    except Exception:
         return "unknown"
 
 def is_i2p(url: str):
@@ -88,7 +84,7 @@ def retrieve_peers(host, port):
         sock = socket.socket()
         sock.settimeout(5)
         sock.connect((host, int(port)))
-    except Exception as e:
+    except Exception:
         return None
 
     bucket = Bucket.create_handshake_request()
@@ -116,7 +112,7 @@ def retrieve_peers(host, port):
             for peer in _peers:
                 try:
                     peers.append("http://%s:%d" % (peer["ip"].ip, peer["port"].value))
-                except:
+                except Exception:
                     pass
 
             sock.close()
@@ -151,8 +147,3 @@ def get_geoip(ip_or_dns):
 
 def get_whois(ip_or_dns):
     pass
-
-# asn
-# asn_cidr
-# asn_country_code
-# asn_description

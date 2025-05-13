@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import arrow
 from flask import Blueprint
 from urllib.parse import urlencode
@@ -13,13 +11,6 @@ def humanize(d):
     return t.humanize()
 
 
-@bp.app_template_filter("hours_elapsed")
-def hours_elapsed(d):
-    now = datetime.utcnow()
-    diff = now - d
-    return diff.total_seconds() / 60 / 60
-
-
 @bp.app_template_filter("pop_arg")
 def trim_arg(all_args, arg_to_trim):
     d = all_args.to_dict()
@@ -29,6 +20,6 @@ def trim_arg(all_args, arg_to_trim):
 
 @bp.app_template_filter("seems_legit")
 def seems_legit(addy):
-    if type(addy) == str:
+    if type(addy) is str:
         return len(addy) == 97
     return False

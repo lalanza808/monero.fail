@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 from datetime import datetime
 
-from peewee import *
+from peewee import AutoField, CharField, BooleanField, IntegerField, FloatField, DateTimeField, ForeignKeyField, Model
 from playhouse.sqliteq import SqliteQueueDatabase
 
 from xmrnodes import config
@@ -70,7 +70,7 @@ class Peer(Model):
         return urlparse(self.url).hostname
 
     def hours_elapsed(self):
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         diff = now - self.datetime
         return diff.total_seconds() / 60 / 60
 

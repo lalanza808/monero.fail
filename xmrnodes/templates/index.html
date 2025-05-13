@@ -25,7 +25,7 @@
             <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
         {% endfor %}
         </ul>
-        
+
     </form>
   </div>
 
@@ -49,7 +49,7 @@
             <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
           </select>
         </span>
-        
+
         <span>
           <label for="cors">Web (CORS):</label>
           <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
@@ -88,7 +88,7 @@
         <a href="https://github.com/lalanza808/docker-monero-node" target="_blank">Run Your Own Node</a><br /><br />
         Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
         <br>
-        Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
+        Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
       </p>
       <p class="center">Showing {{ nodes | length }} nodes.
         {% if 'all' not in request.args %}

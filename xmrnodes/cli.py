@@ -1,9 +1,7 @@
 import logging
-from datetime import datetime, timedelta
-from time import sleep
+from datetime import datetime, timedelta, timezone
 
 import geoip2.database
-import arrow
 import requests
 from flask import Blueprint
 from urllib.parse import urlparse
@@ -23,7 +21,7 @@ def init():
 
 @bp.cli.command("check")
 def check_nodes():
-    diff = datetime.utcnow() - timedelta(hours=72)
+    diff = datetime.now(tz=timezone.utc) - timedelta(hours=72)
     checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
     for check in checks:
         print("Deleting check", check.id)
@@ -44,7 +42,7 @@ def check_node(_node):
     if not node:
         print('node found')
         pass
-    now = datetime.utcnow()
+    now = datetime.now(tz=timezone.utc)
     hc = HealthCheck(node=node)
     logging.info(f"Attempting to check {node.url}")
     try:
@@ -70,7 +68,7 @@ def check_node(_node):
                 logging.info("success")
         else:
             raise
-    except:
+    except Exception:
         logging.info("fail")
         node.datetime_failed = now
         node.available = False
@@ -91,7 +89,7 @@ def check_node(_node):
 def upsert_peer(peer):
     exists = Peer.select().where(Peer.url == peer).first()
     if exists:
-        exists.datetime = datetime.utcnow()
+        exists.datetime = datetime.now(tz=timezone.utc)
         exists.save()
     else:
         with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as geodb:
@@ -108,7 +106,7 @@ def upsert_peer(peer):
                     lon=geodata.location.longitude,
                 )
                 p.save()
-            except Exception as e:
+            except Exception:
                 pass
 
 def _get_peers():
@@ -135,7 +133,7 @@ def _get_peers():
                     upsert_peer(new_peer)
             else:
                 raise Exception('dead node')
-        except Exception as e:
+        except Exception:
             print(f"--- Dead peer {peer.url}")
             peer.delete_instance()
 
@@ -160,7 +158,7 @@ def get_peers():
 def validate():
     nodes = Node.select().where(Node.validated == False)
     for node in nodes:
-        now = datetime.utcnow()
+        now = datetime.now(tz=timezone.utc)
         logging.info(f"Attempting to validate {node.url}")
         try:
             r = make_request(node.url)
@@ -213,7 +211,7 @@ def validate():
 @bp.cli.command("export")
 def export():
     all_nodes = []
-    ts = int(arrow.get().timestamp())
+    ts = int(datetime.now(tz=timezone.utc).timestamp())
     export_dir = f"{config.DATA_DIR}/export.txt"
     export_dir_stamped = f"{config.DATA_DIR}/export-{ts}.txt"
     nodes = Node.select().where(Node.validated == True)
@@ -241,6 +239,6 @@ def import_():
                 node = Node(url=n)
                 node.save()
                 all_nodes.append(n)
-            except:
+            except Exception:
                 pass
     logging.info(f"{len(all_nodes)} node urls imported and ready to be validated")

@@ -11,7 +11,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__)
-app.config.from_envvar("FLASK_SECRETS")
+app.config.from_object("xmrnodes.config")
 app.secret_key = app.config["SECRET_KEY"]
 app.register_blueprint(meta.bp)
 app.register_blueprint(api.bp)

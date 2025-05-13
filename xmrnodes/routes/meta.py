@@ -26,6 +26,7 @@ def index():
     web_compatible = request.args.get("cors", False)
     highest_block = get_highest_block(nettype, crypto)
     healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
+    print(highest_block)
 
     nodes = Node.select().where(
         Node.validated == True, Node.nettype == nettype, Node.crypto == crypto

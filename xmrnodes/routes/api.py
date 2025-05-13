@@ -8,8 +8,8 @@ bp = Blueprint('api', 'api')
 @bp.route("/nodes.json")
 def nodes_json():
     nodes = Node.select().where(
-        Node.validated==True,
-        Node.available==True,
+        Node.validated == True,
+        Node.available == True,
         Node.nettype=="mainnet"
     )
     xmr_nodes = [n for n in nodes if n.crypto == "monero"]
@@ -61,7 +61,7 @@ def health_json():
 @bp.route("/wow_nodes.json")
 def wow_nodes_json():
     nodes = Node.select().where(
-        Node.validated==True
+        Node.validated == True
     ).where(
         Node.nettype=="mainnet"
     ).where(
