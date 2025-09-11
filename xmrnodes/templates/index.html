@@ -25,7 +25,7 @@
             <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
         {% endfor %}
         </ul>
-        
+
     </form>
   </div>
 
@@ -49,7 +49,7 @@
             <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
           </select>
         </span>
-        
+
         <span>
           <label for="cors">Web (CORS):</label>
           <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
@@ -90,13 +90,18 @@
         <br>
         Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over 500 blocks away from highest reported block).
       </p>
-      <p class="center">Showing {{ nodes | length }} nodes.
-        {% if 'all' not in request.args %}
-        <a href="{% if request.args %}{{ request.url }}&{% else %}?{% endif %}all=true">Show All</a>
-        {% else %}
-        <a href="{{ request.path }}?{{ request.args | pop_arg('all') }}">Show Active</a>
+        <p class="center">Showing healthy nodes {{ start_index}}-{{ end_index }} of {{ nodes_healthy }} total.
+        <br /><br />
+        {% if total_pages > 1 %}
+        <div class="pagination center">
+          {% if page > 1 %}
+          <a class="pure-button" style="margin: 0 1em;" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ previous_page }}">Previous</a>
+          {% endif %}
+          {% if page < total_pages %}
+          <a class="pure-button" style="margin: 0 1em;" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ next_page }}">Next</a>
+          {% endif %}
+        </div>
         {% endif %}
-        <br /><br /><a href="{{ url_for('meta.haproxy', chain=request.args.get('chain'), network=request.args.get('network'), cors=request.args.get('cors'), onion=request.args.get('onion')) }}">Download HAProxy config</a>
       </p>
       <br>
       <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">

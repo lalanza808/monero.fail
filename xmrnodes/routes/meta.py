@@ -1,5 +1,5 @@
 import re
-from random import shuffle
+from random import shuffle, seed
 from math import ceil
 
 import arrow
@@ -18,48 +18,89 @@ bp = Blueprint("meta", "meta")
 @bp.route("/", methods=["GET", "POST"])
 def index():
     form = SubmitNode()
+
+    # Clean up query parameters
+
+    # Extract parameters with defaults
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
     onion = request.args.get("onion", False)
     i2p = request.args.get("i2p", False)
-    show_all = "true" == request.args.get("all", "false")
     web_compatible = request.args.get("cors", False)
+
+    # Validate and limit page number
+    per_page = 100  # Number of nodes per page
     highest_block = get_highest_block(nettype, crypto)
     healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
 
+    # Base query for nodes
     nodes = Node.select().where(
-        Node.validated == True, Node.nettype == nettype, Node.crypto == crypto
+        Node.nettype == nettype,
+        Node.crypto == crypto,
+        Node.validated == True
     )
 
     if web_compatible:
         nodes = nodes.where(Node.web_compatible == True)
+
+    if onion:
+        nodes = nodes.where(Node.is_tor == True)
+
+    if i2p:
+        nodes = nodes.where(Node.is_i2p == True)
 
     nodes_all = nodes.count()
     nodes_unhealthy = nodes.where(
         (Node.available == False) | (Node.last_height < healthy_block)
     ).count()
 
-    if not show_all:
-        nodes = nodes.where(Node.available == True, Node.last_height > healthy_block)
+    nodes = nodes.where(
+        Node.available == True,
+        Node.last_height > healthy_block
+    ).order_by(Node.datetime_entered.desc())
 
-    nodes = nodes.order_by(Node.datetime_entered.desc())
-    if onion:
-        nodes = nodes.where(Node.is_tor == True)
-    if i2p:
-        nodes = nodes.where(Node.is_i2p == True)
 
-    nodes = [n for n in nodes]
-    shuffle(nodes)
+    nodes_healthy = nodes.count()
+
+    # Pagination
+    total_pages = (nodes_healthy // per_page) + 1
+
+    # Ensure page is within valid range
+    page = int(request.args.get("page", 1))
+    if page > total_pages:
+        page = total_pages
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    if nodes_healthy < per_page:
+        end_index = nodes_healthy
+    seed(page)
+    nodes_list = list(nodes)
+    shuffle(nodes_list)
+    paginated_nodes = nodes_list[start_index:end_index]
+    next_page = None
+    if page < total_pages:
+        next_page = page + 1
+    previous_page = None
+    if page > 1:
+        previous_page = page - 1
 
     return render_template(
         "index.html",
-        nodes=nodes,
+        nodes=paginated_nodes,
         nodes_all=nodes_all,
         nodes_unhealthy=nodes_unhealthy,
+        nodes_healthy=nodes_healthy,
         nettype=nettype,
         crypto=crypto,
         form=form,
         web_compatible=web_compatible,
+        page=page,
+        total_pages=total_pages,
+        per_page=per_page,
+        next_page=next_page,
+        previous_page=previous_page,
+        start_index=start_index,
+        end_index=end_index,
     )
 
 
@@ -112,7 +153,11 @@ def opsec():
 @bp.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":
-        url = request.form.get("node_url")
+        url = request.form.get("node_url", "").strip()
+        if not url:
+            flash("URL is required")
+            return redirect("/")
+
         regex = re.compile(
             r"^(?:http)s?://"  # http:// or https://
             r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
@@ -122,8 +167,7 @@ def add():
             r"(?:/?|[/?]\S+)$",
             re.IGNORECASE,
         )
-        re_match = re.match(regex, url)
-        if re_match is None:
+        if not regex.match(url):
             flash("This doesn't look like a valid URL")
         else:
             _url = urlparse(url)
