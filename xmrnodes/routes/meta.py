@@ -24,9 +24,8 @@ def index():
     # Extract parameters with defaults
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
-    onion = request.args.get("onion", False)
-    i2p = request.args.get("i2p", False)
-    web_compatible = request.args.get("cors", False)
+    type = request.args.get("type", "all")
+    web_compatible = False
 
     # Validate and limit page number
     per_page = 100  # Number of nodes per page
@@ -40,14 +39,19 @@ def index():
         Node.validated == True
     )
 
-    if web_compatible:
-        nodes = nodes.where(Node.web_compatible == True)
-
-    if onion:
+    if type == "clear":
+        nodes = nodes.where(
+            Node.web_compatible == False,
+            Node.is_tor == False,
+            Node.is_i2p == False
+        )
+    elif type == "onion":
         nodes = nodes.where(Node.is_tor == True)
-
-    if i2p:
+    elif type == "i2p":
         nodes = nodes.where(Node.is_i2p == True)
+    elif type == "cors":
+        nodes = nodes.where(Node.web_compatible == True)
+        web_compatible = True
 
     nodes_all = nodes.count()
     nodes_unhealthy = nodes.where(

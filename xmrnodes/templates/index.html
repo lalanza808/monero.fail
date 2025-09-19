@@ -51,18 +51,23 @@
         </span>
 
         <span>
+          <label for="cors">Clear:</label>
+          <input type="radio" name="type" value="clear" id="clear" {% if request.args.get('type') == 'clear' %}checked{% endif %}>
+        </span>
+
+        <span>
           <label for="cors">Web (CORS):</label>
-          <input type="checkbox" name="cors" id="cors" {% if request.args.get('cors') == 'on' %}checked{% endif %}>
+          <input type="radio" name="type" value="cors" id="cors" {% if request.args.get('type') == 'cors' %}checked{% endif %}>
         </span>
 
         <span>
           <label for="onion">Onion:</label>
-          <input type="checkbox" name="onion" id="onion" {% if request.args.get('onion') == 'on' %}checked{% endif %}>
+          <input type="radio" name="type" value="onion" id="onion" {% if request.args.get('type') == 'onion' %}checked{% endif %}>
         </span>
 
         <span>
           <label for="i2p">I2P:</label>
-          <input type="checkbox" name="i2p" id="i2p" {% if request.args.get('i2p') == 'on' %}checked{% endif %}>
+          <input type="radio" name="type" value="i2p" id="i2p" {% if request.args.get('type') == 'i2p' %}checked{% endif %}>
         </span>
 
         <span>
