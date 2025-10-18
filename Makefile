@@ -1,6 +1,5 @@
 setup:
-	python3 -m venv .venv
-	.venv/bin/pip install -r requirements.txt
+	uv sync
 	mkdir -p data
 	wget https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb -P data --no-clobber
 
