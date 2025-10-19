@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from datetime import datetime, timedelta
 from time import sleep
 
@@ -6,10 +7,11 @@ import geoip2.database
 import arrow
 import requests
 from flask import Blueprint
+from jinja2 import Environment, FileSystemLoader
 from urllib.parse import urlparse
 
 from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
-from xmrnodes.helpers import retrieve_peers, get_highest_block, get_geoip
+from xmrnodes.helpers import retrieve_peers, get_highest_block, get_geoip, get_nodes
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
@@ -20,6 +22,15 @@ bp = Blueprint("cli", "cli", cli_group=None)
 def init():
     pass
 
+@bp.cli.command("html")
+def html():
+    cur_dir = Path(__file__)
+    env = Environment(loader=FileSystemLoader(Path(cur_dir.parent, "templates")))
+    template = env.get_template('offline.html')
+    rendered_html = template.render(get_nodes=get_nodes)
+    offline_html_path = Path(config.DATA_DIR, 'offline.html')
+    with open(offline_html_path, "w") as f:
+        f.write(rendered_html)
 
 @bp.cli.command("check")
 def check_nodes():
@@ -45,7 +56,7 @@ def check_node(_node):
         print('node found')
         pass
     now = datetime.utcnow()
-    hc = HealthCheck(node=node)
+    hc = HealthCheck(node=node, health=False)
     logging.info(f"Attempting to check {node.url}")
     try:
         r = make_request(node.url)
@@ -70,8 +81,8 @@ def check_node(_node):
                 logging.info("success")
         else:
             raise
-    except:
-        logging.info("fail")
+    except Exception as e:
+        logging.info(f"fail: {e}")
         node.datetime_failed = now
         node.available = False
         hc.health = False

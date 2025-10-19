@@ -14,6 +14,17 @@ from xmrnodes.models import Node
 from xmrnodes import config
 
 
+def get_nodes(nettype: str, i2p: bool, tor: bool, cors: bool):
+    xmr_nodes = Node.select().where(
+        Node.crypto == "monero",
+        Node.available == True,
+        Node.nettype == nettype,
+        Node.is_tor == tor,
+        Node.is_i2p == i2p,
+        Node.web_compatible == cors
+    )
+    return xmr_nodes
+
 def make_request(url: str, path="/get_info", data=None):
     headers = {"Origin": "https://monero.fail"}
     if is_onion(url):

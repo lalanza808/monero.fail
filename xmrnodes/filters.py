@@ -4,6 +4,8 @@ import arrow
 from flask import Blueprint
 from urllib.parse import urlencode
 
+from xmrnodes.helpers import get_nodes as _get_nodes
+
 bp = Blueprint("filters", "filters")
 
 
