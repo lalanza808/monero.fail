@@ -70,7 +70,11 @@ def index():
     total_pages = (nodes_healthy // per_page) + 1
 
     # Ensure page is within valid range
-    page = int(request.args.get("page", 1))
+    page = request.args.get("page", "1")
+    if not page.isdigit():
+        return redirect("/")
+    else:
+        page = int(page)
     if page > total_pages:
         page = total_pages
     start_index = (page - 1) * per_page
