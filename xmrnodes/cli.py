@@ -34,18 +34,16 @@ def html():
 
 @bp.cli.command("check")
 def check_nodes():
-    diff = datetime.utcnow() - timedelta(hours=72)
-    checks = HealthCheck.select().where(HealthCheck.datetime <= diff)
-    for check in checks:
-        print("Deleting check", check.id)
-        check.delete_instance()
-    nodes = Node.select().where(Node.validated == True)
+    nodes = Node.select().where(
+        Node.validated == True
+    ).order_by(
+        Node.datetime_checked.asc()
+    ).limit(20)
     for node in nodes:
         try:
             check_node(node.url)
         except KeyboardInterrupt:
             exit()
-
 
 def check_node(_node):
     if _node.startswith("http"):
@@ -53,47 +51,55 @@ def check_node(_node):
     else:
         node = Node.select().where(Node.id == _node).first()
     if not node:
-        print('node found')
+        print('node not found')
         pass
     now = datetime.utcnow()
+    # delete old healthchecks
+    diff = now - timedelta(hours=72)
+    hcs = 0
+    for hc in node.healthchecks:
+        if hc.datetime >= diff:
+            hcs += 1
+            hc.delete_instance()
+    if hcs:
+        logging.info(f"Deleted {hcs} old healthchecks for {node.url}")
     hc = HealthCheck(node=node, health=False)
-    logging.info(f"Attempting to check {node.url}")
+    logging.info(f"Checking {node.url}")
     try:
         r = make_request(node.url)
         assert "status" in r.json()
         assert "offline" in r.json()
         assert "height" in r.json()
-        if 'donation_address' in r.json():
-            node.donation_address = r.json()['donation_address']
+        if "donation_address" in r.json():
+            node.donation_address = r.json()["donation_address"]
         has_cors = "Access-Control-Allow-Origin" in r.headers
         is_ssl = node.url.startswith("https://")
         if r.json()["status"] == "OK":
             node.web_compatible = has_cors and is_ssl
             node.last_height = r.json()["height"]
             hc.health = True
-            highest_block = get_highest_block(node.nettype, node.crypto)
-            healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
-            if r.json()["height"] < healthy_block:
-                node.available = False
-                logging.info("unhealthy")
-            else:
-                node.available = True
-                logging.info("success")
+            # highest_block = get_highest_block(node.nettype, node.crypto)
+            # healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
+            # if r.json()["height"] < healthy_block:
+            #     node.available = False
+            #     logging.info("unhealthy")
+            # else:
+            #     node.available = True
+            #     logging.info("success")
         else:
             raise
     except Exception as e:
         logging.info(f"fail: {e}")
+        node.datetime_checked = now
         node.datetime_failed = now
         node.available = False
         hc.health = False
-    finally:
-        node.datetime_checked = now
-        node.save()
-        hc.save()
-    if (
-        node.get_failed_checks().count() == node.get_all_checks().count()
-        and node.get_all_checks().count() > 50
-    ):
+    node.datetime_checked = now
+    node.save()
+    hc.save()
+    failed_checks = node.get_failed_checks().count()
+    all_checks = node.get_all_checks().count()
+    if failed_checks == all_checks and all_checks > 5:
         print("this node fails all of its health checks - deleting it!")
         for _hc in node.get_all_checks():
             _hc.delete_instance()

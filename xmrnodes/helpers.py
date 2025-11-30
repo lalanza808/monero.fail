@@ -30,11 +30,11 @@ def make_request(url: str, path="/get_info", data=None):
     if is_onion(url):
         _p = f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"
         proxies = {"http": _p, "https": _p}
-        timeout = 30
+        timeout = 20
     elif is_i2p(url):
         _p = f"http://{config.I2P_HOST}:{config.I2P_PORT}"
         proxies = {"http": _p, "https": _p}
-        timeout = 30
+        timeout = 20
     else:
         proxies = None
         timeout = 10
@@ -44,7 +44,7 @@ def make_request(url: str, path="/get_info", data=None):
         proxies=proxies,
         json=data,
         headers=headers,
-        verify=False,
+        verify=True,
     )
     r.raise_for_status()
     return r
