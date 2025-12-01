@@ -51,20 +51,11 @@ def check_node(_node):
     else:
         node = Node.select().where(Node.id == _node).first()
     if not node:
-        print('node not found')
+        logging.info('{_node} not found')
         pass
     now = datetime.utcnow()
-    # delete old healthchecks
-    diff = now - timedelta(hours=72)
-    hcs = 0
-    for hc in node.healthchecks:
-        if hc.datetime >= diff:
-            hcs += 1
-            hc.delete_instance()
-    if hcs:
-        logging.info(f"Deleted {hcs} old healthchecks for {node.url}")
     hc = HealthCheck(node=node, health=False)
-    logging.info(f"Checking {node.url}")
+    logging.info(f"[+] Checking {node.url}")
     try:
         r = make_request(node.url)
         assert "status" in r.json()
@@ -89,7 +80,7 @@ def check_node(_node):
         else:
             raise
     except Exception as e:
-        logging.info(f"fail: {e}")
+        logging.info(f"  [!] Unhealthy: {e.__class__.__name__}")
         node.datetime_checked = now
         node.datetime_failed = now
         node.available = False
@@ -99,11 +90,23 @@ def check_node(_node):
     hc.save()
     failed_checks = node.get_failed_checks().count()
     all_checks = node.get_all_checks().count()
+    logging.info(f"  [.] {node.url} failed {failed_checks} out of {all_checks}")
     if failed_checks == all_checks and all_checks > 5:
-        print("this node fails all of its health checks - deleting it!")
+        # delete failing nodes
+        logging.info(f"  [!] {node.url} fails all of its health checks - deleting it!")
         for _hc in node.get_all_checks():
             _hc.delete_instance()
         node.delete_instance()
+    else:
+        # delete old healthchecks
+        diff = now - timedelta(hours=240)
+        hcs = 0
+        for hc in node.healthchecks:
+            if hc.datetime >= diff:
+                hcs += 1
+                hc.delete_instance()
+        if hcs:
+            logging.info(f"  [.] Deleted {hcs} old healthchecks for {node.url}")
 
 def upsert_peer(peer):
     exists = Peer.select().where(Peer.url == peer).first()
