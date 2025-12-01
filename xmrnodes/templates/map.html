@@ -45,23 +45,16 @@
 
  <body>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class="flashes pure-u-1 center">
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-
 <div class="center info">
   <p>Recent Peers: {{ recent_peers }}</p>
   <p>Source Node: {{ source_node }}</p>
   <p>
     This is not a full representation of the entire Monero network,
-    just a look into the peers being recursively crawled from the source node ({{ source_node }}).
+    just a look into the peers being recursively crawled from the source node.
     New peers are searched every hour and unresponsive nodes are removed.
+  </p>
+  <p>
+    The map is currently showing only {{ shown_peers }} peers.
   </p>
   <br>
   <a href="/">Go home</a>
@@ -130,13 +123,15 @@
       layers: [
         new ol.layer.Tile({
           source: new ol.source.OSM(),
-          preload: 4
+          preload: 2
         }),
         markerLayer
       ],
       view: new ol.View({
         center: ol.proj.fromLonLat([0, 25]),
-        zoom: 1
+        minZoom: 3,
+        zoom: 3,
+        maxZoom: 10
       })
     });
 
@@ -144,7 +139,7 @@
     const res = await fetch('?fetch=1')
       .then((res) => res.json())
     console.log(`Found ${res.total} pages of peers to fetch`)
-    fetchWithDelay(res.total);
+    fetchWithDelay(res.total, 300);
 
     // Setup popup
     var popup = new ol.Overlay({
@@ -178,7 +173,7 @@
     document.getElementById('map').style['opacity'] = 0;
     setTimeout(function() {
       loadMap();
-    }, 1500);
+    }, 1000);
   });
 </script>
 

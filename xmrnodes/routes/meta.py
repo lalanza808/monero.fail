@@ -1,6 +1,7 @@
 import re
 from random import shuffle, seed
 from math import ceil
+from datetime import timedelta
 
 import arrow
 from flask import request, redirect, Blueprint
@@ -115,14 +116,18 @@ def index():
 @bp.route("/map")
 def map():
     fetch = request.args.get("fetch")
+    now = arrow.now()
+    diff = now.datetime - timedelta(hours=48)
+    all_peers = Peer.select()
+    peers = all_peers.where(Peer.datetime >= diff).order_by(Peer.datetime.desc()).limit(5000)
     if fetch:
         _peers = {}
         next = None
-        limit = 500
+        limit = 1000
         rgb = "238,111,45"
         offset = request.args.get("offset", 0)
         offset = int(offset)
-        peers = Peer.select().order_by(Peer.datetime.asc())
+        
         paginated_peers = peers.paginate(offset, limit)
         total = ceil(peers.count() / limit)
         if offset < total:
@@ -143,8 +148,9 @@ def map():
         }
     return render_template(
         "map.html",
-        recent_peers=Peer.select().count(),
-        source_node=config.NODE_HOST
+        recent_peers=all_peers.count(),
+        source_node=config.NODE_HOST,
+        shown_peers=peers.count()
     )
 
 
