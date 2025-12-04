@@ -102,7 +102,7 @@ def check_node(_node):
         diff = now - timedelta(hours=240)
         hcs = 0
         for hc in node.healthchecks:
-            if hc.datetime >= diff:
+            if hc.datetime <= diff:
                 hcs += 1
                 hc.delete_instance()
         if hcs:
