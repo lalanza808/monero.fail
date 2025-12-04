@@ -138,7 +138,7 @@ def map():
                 "rgba": f"rgba({rgb},{opacity})",
                 "lat": peer.lat,
                 "lon": peer.lon,
-                "last_seen": arrow.get(peer.datetime).humanize()
+                "last_seen": arrow.get(peer.datetime).humanize(granularity="hour")
             }
         return {
             "offset": offset,
