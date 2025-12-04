@@ -117,7 +117,7 @@ def index():
 def map():
     fetch = request.args.get("fetch")
     now = arrow.now()
-    diff = now.datetime - timedelta(hours=48)
+    diff = now.datetime - timedelta(hours=72)
     all_peers = Peer.select()
     peers = all_peers.where(Peer.datetime >= diff).order_by(Peer.datetime.desc()).limit(5000)
     if fetch:
