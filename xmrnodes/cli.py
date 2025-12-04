@@ -69,14 +69,14 @@ def check_node(_node):
             node.web_compatible = has_cors and is_ssl
             node.last_height = r.json()["height"]
             hc.health = True
-            # highest_block = get_highest_block(node.nettype, node.crypto)
-            # healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
-            # if r.json()["height"] < healthy_block:
-            #     node.available = False
-            #     logging.info("unhealthy")
-            # else:
-            #     node.available = True
-            #     logging.info("success")
+            highest_block = get_highest_block(node.nettype, node.crypto)
+            healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
+            if r.json()["height"] < healthy_block:
+                node.available = False
+                logging.info("unhealthy")
+            else:
+                node.available = True
+                logging.info("success")
         else:
             raise
     except Exception as e:
