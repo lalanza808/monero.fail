@@ -25,7 +25,7 @@ def index():
     # Extract parameters with defaults
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
-    type = request.args.get("type", "all")
+    node_type = request.args.get("type", "all")
     web_compatible = False
 
     # Validate and limit page number
@@ -40,17 +40,17 @@ def index():
         Node.validated == True
     )
 
-    if type == "clear":
+    if node_type == "clear":
         nodes = nodes.where(
             Node.web_compatible == False,
             Node.is_tor == False,
             Node.is_i2p == False
         )
-    elif type == "onion":
+    elif node_type == "onion":
         nodes = nodes.where(Node.is_tor == True)
-    elif type == "i2p":
+    elif node_type == "i2p":
         nodes = nodes.where(Node.is_i2p == True)
-    elif type == "cors":
+    elif node_type == "cors":
         nodes = nodes.where(Node.web_compatible == True)
         web_compatible = True
 
@@ -117,9 +117,8 @@ def index():
 def map():
     fetch = request.args.get("fetch")
     now = arrow.now()
-    diff = now.datetime - timedelta(hours=72)
     all_peers = Peer.select()
-    peers = all_peers.where(Peer.datetime >= diff).order_by(Peer.datetime.desc()).limit(5000)
+    peers = all_peers.order_by(Peer.datetime.desc()).limit(5000)
     if fetch:
         _peers = {}
         next = None
@@ -133,7 +132,7 @@ def map():
         if offset < total:
             next = offset + 1
         for peer in paginated_peers:
-            opacity = 1 - (peer.hours_elapsed() / 100)
+            opacity = ".8"
             _peers[peer.url] = {
                 "rgba": f"rgba({rgb},{opacity})",
                 "lat": peer.lat,
