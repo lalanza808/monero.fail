@@ -53,6 +53,8 @@ def index():
     elif node_type == "cors":
         nodes = nodes.where(Node.web_compatible == True)
         web_compatible = True
+    else:
+        nodes = nodes.where(Node.is_i2p == False, Node.is_tor == False)
 
     nodes_all = nodes.count()
     nodes_unhealthy = nodes.where(
