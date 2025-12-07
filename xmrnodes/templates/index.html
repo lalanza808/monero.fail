@@ -2,37 +2,44 @@
 
 {% block content %}
 
-
-<div id="index" class="container">
-
-  <div id="addnode" class="pure-g center section">
-    <div class="title pure-u-1">
-      <h2>Add A Node</h2>
+<div id="addnode" class="box">
+  <h2>Add A Node</h2>
+  <p>
+    You can also automate this process using <strong>curl</strong>
+  </p>
+  <code>curl -q -X POST https://monero.fail/add -d node_url="${NODE_URL}"</code>
+  <form method="POST" action="/add">
+    {{ form.csrf_token }}
+    {% for f in form %}
+      {% if f.name != 'csrf_token' %}
+        <div class="form-group">
+          {{ f.label }}
+          {{ f }}
+          <button type="submit" class="button">Submit</button>
+        </div>
+      {% endif %}
+    {% endfor %}
+    <ul>
+    {% for field, errors in form.errors.items() %}
+        <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
+    {% endfor %}
+    </ul>
+  </form>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="spacer">
+      {% for message in messages %}
+        <p class="alert alert-warning">{{ message }}</p>
+      {% endfor %}
     </div>
-    <form method="POST" action="{{ url_for('meta.add') }}" class="pure-form pure-u-1">
-        {{ form.csrf_token }}
-        {% for f in form %}
-          {% if f.name != 'csrf_token' %}
-            <div class="form-group">
-              {{ f.label }}
-              {{ f }}
-              <button type="submit" class="pure-button pure-button-primary">Submit</button>
-            </div>
-          {% endif %}
-        {% endfor %}
-        <ul>
-        {% for field, errors in form.errors.items() %}
-            <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
-        {% endfor %}
-        </ul>
-
-    </form>
-  </div>
-
-  <div id="nodes" class="pure-u-1 section">
-    <h2 class="center">Find a Node</h2>
-    <div class="center" id="filters">
-      <form>
+    {% endif %}
+  {% endwith %}
+</div>
+<div id="findnodes" class="box">
+  <h2>Find a Node</h2>
+  <div id="filters">
+    <form>
+      <div class="row">
         <span>
           <label for="chainSelect">Chain:</label>
           <select name="chain" id="chainSelect">
@@ -40,7 +47,6 @@
             <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
           </select>
         </span>
-
         <span>
           <label for="networkSelect">Network:</label>
           <select name="network" id="networkSelect">
@@ -49,135 +55,105 @@
             <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
           </select>
         </span>
-
         <span>
-          <label for="cors">Clear:</label>
-          <input type="radio" name="type" value="clear" id="clear" {% if request.args.get('type') == 'clear' %}checked{% endif %}>
+          <label for="networkSelect">Node Type:</label>
+          <select name="type" id="typeSelect">
+            <option value="clear" {% if request.args.get('type') == 'clear' %}selected{% endif %}>Clear + CORS</option>
+            <option value="cors" {% if request.args.get('type') == 'cors' %}selected{% endif %}>CORS</option>
+            <option value="onion" {% if request.args.get('type') == 'onion' %}selected{% endif %}>Onion</option>
+            <option value="i2p" {% if request.args.get('type') == 'i2p' %}selected{% endif %}>I2P</option>
+          </select>
         </span>
-
+      </div>
+      <div class="row">
         <span>
-          <label for="cors">Web (CORS):</label>
-          <input type="radio" name="type" value="cors" id="cors" {% if request.args.get('type') == 'cors' %}checked{% endif %}>
+          <input type="submit" value="Filter" class="button alert alert-info">
         </span>
-
         <span>
-          <label for="onion">Onion:</label>
-          <input type="radio" name="type" value="onion" id="onion" {% if request.args.get('type') == 'onion' %}checked{% endif %}>
+          <a href="/" class="button alert alert-warning">Reset</a>
         </span>
-
-        <span>
-          <label for="i2p">I2P:</label>
-          <input type="radio" name="type" value="i2p" id="i2p" {% if request.args.get('type') == 'i2p' %}checked{% endif %}>
-        </span>
-
-        <span>
-          <input type="submit" value="Filter" class="pure-button pure-pink">
-        </span>
-
-        <span>
-          <a href="/"><input type="button" value="Reset" class="pure-button pure-grey"></a>
-        </span>
-      </form>
-    </div>
-    {% if nodes %}
-    <div class="xmrnodes">
-      <p class="center">
-        {% if web_compatible %}
-        <strong>
-          Web compatible means the node is run in such a way that it allows web clients to access their APIs (CORS headers allow all and secure HTTP / TLS terminated).
-          <br>
-          The more nodes there are running with these settings the more robust web clients will be in the future.
-        </strong>
-        <br><br>
-        {% endif %}
-        <a href="https://github.com/lalanza808/docker-monero-node" target="_blank">Run Your Own Node</a><br /><br />
-        Tracking {{ nodes_all }} {{ nettype }} {{ crypto | capitalize }} nodes in the database.
-        <br>
-        Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
-      </p>
-        <p class="center">Showing healthy nodes {{ start_index}}-{{ end_index }} of {{ nodes_healthy }} total.
-        <br /><br />
-        {% if total_pages > 1 %}
-        <div class="pagination center">
-          {% if page > 1 %}
-          <a class="pure-button" style="margin: 0 1em;" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ previous_page }}">Previous</a>
-          {% endif %}
-          {% if page < total_pages %}
-          <a class="pure-button" style="margin: 0 1em;" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ next_page }}">Next</a>
-          {% endif %}
-        </div>
-        {% endif %}
-      </p>
-      <br>
-      <table class="pure-table pure-table-horizontal pure-table-striped js-sort-table">
-        <thead>
-          <tr>
-            <th class="js-sort-string">Type</th>
-            <th class="js-sort-string">URL</th>
-            <th class="js-sort-number">Height</th>
-            <th class="js-sort-none">Up</th>
-            <th class="js-sort-none">Web<br/>Compatible</th>
-            <th class="js-sort-none">Network</th>
-            <th class="js-sort-none">Last Checked</th>
-            <th class="js-sort-none">History</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for node in nodes %}
-          <tr class="js-sort-table">
-            <td>
-              {% if node.is_tor %}
-                <img src="/static/images/tor.svg" height="20px">
-                <span class="hidden">tor</span>
-                {% elif node.is_i2p %}
-                <img src="/static/images/i2p.svg" height="20px">
-                <span class="hidden">i2p</span>
-                {% else %}
-                <img src="/static/images/clearnet.svg" height="20px">
-                <span class="hidden">clear</span>
-                {% endif %}
-            </td>
-            <td>
-              <span class="nodeURL">{{ node.url }}</span>
-              {% if node.donation_address | seems_legit %}
-                <span class="donationAddress">{{ node.donation_address }}</span>
-              {% endif %}
-            </td>
-            <td>{{ node.last_height }}</td>
-            <td>
-              {% if node.available %}
-                <span class="dot glowing-green"></span>
-              {% else %}
-                <span class="dot glowing-red""></span>
-              {% endif %}
-            </td>
-            <td>
-              {% if node.web_compatible %}
-              <img src="/static/images/success.svg" class="filter-green" width=16px>
-              {% else %}
-              <img src="/static/images/error.svg" class="filter-red" width=16px>
-              {% endif %}
-            </td>
-            <td>{{ node.nettype }}</td>
-            <td>{{ node.datetime_checked | humanize }}</td>
-            <td>{% for hc in node.healthchecks %}
-              {% if loop.index > loop.length - 6 %}
-              <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
-              {% endif %}
-            {% endfor %}
-            </td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-      <p class="center">No nodes in the database yet...</p>
-    {% endif %}
+      </div>
+    </form>
   </div>
-
+  {% if nodes %}
+  <div class="xmrnodes">
+    {% if web_compatible %}
+    <p>
+      <strong>
+        Web compatible means the node is run in such a way that it allows web clients to access their APIs (CORS headers allow all and secure HTTP / TLS terminated). The more nodes there are running with these settings the more robust web clients will be in the future.
+      </strong>
+    </p>
+    {% endif %}
+    <p>
+      There are {{ total_nodes }} {{ nettype }} {{ crypto | capitalize }} nodes in the database but {{ nodes_all }} nodes shown with the current filters.
+    </p>
+    <p>
+      Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
+    </p>
+    <p>
+      Showing healthy nodes {{ start_index}}-{{ end_index }} of {{ nodes_healthy }} total.
+    </p>
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if page > 1 %}
+      <a class="button" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ previous_page }}#findnodes">Previous</a>
+      {% endif %}
+      {% if page < total_pages %}
+      <a class="button" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ next_page }}#findnodes">Next</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    <br>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>URL</th>
+          <th>CORS</th>
+          <th>Info</th>
+          <th>History</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for node in nodes %}
+        <tr>
+          <td>
+            {% if node.is_tor %}
+            <img src="/static/images/tor.svg" height="20px">
+            {% elif node.is_i2p %}
+            <img src="/static/images/i2p.svg" height="20px">
+            {% else %}
+            <img src="/static/images/clearnet.svg" height="20px">
+            {% endif %}
+          </td>
+          <td id="nodeURL">
+            <span class="address">{{ node.url }}</span>
+            {% if node.donation_address | seems_legit %}
+              <span class="donationAddress address">{{ node.donation_address }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if node.web_compatible %}
+            <img src="/static/images/success.svg" class="filter-green" width=16px>
+            {% else %}
+            <img src="/static/images/error.svg" class="filter-red" width=16px>
+            {% endif %}
+          </td>
+          <td><a href="{{ node.url }}/get_info" target="_blank">get_info</a></td>
+          <td>{% for hc in node.healthchecks %}
+            {% if loop.index > loop.length - 6 %}
+            <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
+            {% endif %}
+          {% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="center">No nodes in the database yet...</p>
+  {% endif %}
 </div>
-
-<script src="/static/js/sort-table.min.js"></script>
 
 {% endblock %}

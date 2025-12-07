@@ -40,9 +40,10 @@ def index():
         Node.validated == True
     )
 
+    total_nodes = nodes.count()
+
     if node_type == "clear":
         nodes = nodes.where(
-            Node.web_compatible == False,
             Node.is_tor == False,
             Node.is_i2p == False
         )
@@ -98,6 +99,7 @@ def index():
     return render_template(
         "index.html",
         nodes=paginated_nodes,
+        total_nodes=total_nodes,
         nodes_all=nodes_all,
         nodes_unhealthy=nodes_unhealthy,
         nodes_healthy=nodes_healthy,
@@ -105,6 +107,7 @@ def index():
         crypto=crypto,
         form=form,
         web_compatible=web_compatible,
+        node_type=node_type,
         page=page,
         total_pages=total_pages,
         per_page=per_page,
