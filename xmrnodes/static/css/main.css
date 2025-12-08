@@ -74,6 +74,20 @@ td {
     margin: 0 auto;
 }
 
-#selectedNode {
-    background-color: rgba(0, 9, 187, 0.3);
+th, td {
+  border: 1px solid black; /* Applies a 1px solid black border to table headers and data cells */
+  padding: 6px;
+  text-align: left;
+}
+
+.highlight {
+    padding: 4px;
+}
+
+.h-mag {
+    background-color: rgba(255, 0, 255, .6);
+}
+
+.h-cya {
+    background-color: rgba(0, 255, 255, 0.6);
 }

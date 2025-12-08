@@ -70,7 +70,7 @@
           <input type="submit" value="Filter" class="button alert alert-info">
         </span>
         <span>
-          <a href="/" class="button alert alert-warning">Reset</a>
+          <a href="/#findnodes" class="button alert alert-warning">Reset</a>
         </span>
       </div>
     </form>
@@ -84,8 +84,9 @@
       </strong>
     </p>
     {% endif %}
+    <div class="spacer"></div>
     <p>
-      There are {{ total_nodes }} {{ nettype }} {{ crypto | capitalize }} nodes in the database but {{ nodes_all }} nodes shown with the current filters.
+      There are <span class="highlight h-mag">{{ total_nodes }}</span> {{ nettype }} {{ crypto | capitalize }} nodes in the database but <span class="highlight h-cya">{{ nodes_all }}</span> nodes shown with the current filters.
     </p>
     <p>
       Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
@@ -110,7 +111,7 @@
           <th>Type</th>
           <th>URL</th>
           <th>CORS</th>
-          <th>Info</th>
+          <th>Last Height</th>
           <th>History</th>
         </tr>
       </thead>
@@ -128,6 +129,9 @@
           </td>
           <td id="nodeURL">
             <span class="address">{{ node.url }}</span>
+            <a href="{{ node.url }}/get_info" target="_blank">
+              <img src="/static/images/open-link.svg" height="15px">
+            </a>
             {% if node.donation_address | seems_legit %}
               <span class="donationAddress address">{{ node.donation_address }}</span>
             {% endif %}
@@ -139,7 +143,7 @@
             <img src="/static/images/error.svg" class="filter-red" width=16px>
             {% endif %}
           </td>
-          <td><a href="{{ node.url }}/get_info" target="_blank">get_info</a></td>
+          <td>{{ node.last_height }}</td>
           <td>{% for hc in node.healthchecks %}
             {% if loop.index > loop.length - 6 %}
             <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
