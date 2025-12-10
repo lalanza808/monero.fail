@@ -1,0 +1,12 @@
+SELECT
+  strftime('%s', datetime_entered) AS time,
+
+  -- Cumulative counts
+  COUNT(*) FILTER (WHERE is_tor = 1)        OVER (ORDER BY datetime_entered) AS "Tor",
+  COUNT(*) FILTER (WHERE is_i2p = 1)        OVER (ORDER BY datetime_entered) AS "I2P",
+  COUNT(*) FILTER (WHERE web_compatible = 1) OVER (ORDER BY datetime_entered) AS "Web-compatible",
+  COUNT(*) FILTER (WHERE is_tor = 0 AND is_i2p = 0 AND web_compatible = 0) OVER (ORDER BY datetime_entered) AS "Clearnet"
+
+FROM node
+WHERE datetime_entered >= '2023-01-01'   -- optional static range, or just remove
+ORDER BY datetime_entered;
