@@ -121,7 +121,7 @@ def index():
 @bp.route("/map")
 def map():
     fetch = request.args.get("fetch")
-    now = arrow.now()
+    now = arrow.utcnow()
     all_peers = Peer.select()
     peers = all_peers.order_by(Peer.datetime.desc()).limit(5000)
     if fetch:
@@ -142,7 +142,7 @@ def map():
                 "rgba": f"rgba({rgb},{opacity})",
                 "lat": peer.lat,
                 "lon": peer.lon,
-                "last_seen": arrow.get(peer.datetime).humanize(granularity="hour")
+                "last_seen": arrow.get(peer.datetime).humanize(now, granularity="minute")
             }
         return {
             "offset": offset,
