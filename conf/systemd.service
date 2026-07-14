@@ -1,0 +1,19 @@
+[Unit]
+Description=monero.fail flask onion service
+After=network-online.target
+
+[Service]
+User=monero
+Group=monero
+Restart=always
+RestartSec=3
+WorkingDirectory=/home/monero/monero.fail
+Environment=FLASK_ENV=production
+Environment=FLASK_APP=xmrnodes/app.py
+Environment=FLASK_SECRETS=config.py
+Environment=SERVER_NAME=livk2fpdv4xjnjrbxfz2tw3ptogqacn2dwfzxbxr3srinryxrcewemid.onion
+Environment=FLASK_DEBUG=0
+ExecStart=/home/monero/monero.fail/.venv/bin/gunicorn --bind 127.0.0.1:4001 xmrnodes.app:app --log-file /home/monero/monero.fail/data/onion-access.log --pid /home/monero/monero.fail/data/onion-gunicorn.pid --workers 2 --reload
+
+[Install]
+WantedBy=default.target
