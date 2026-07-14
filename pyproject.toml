@@ -1,9 +1,9 @@
 [project]
 name = "monero-fail"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "monero.fail - public node tracker"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
     "arrow>=1.2.3",
     "flask>=2.2.5",
