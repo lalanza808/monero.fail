@@ -86,7 +86,7 @@
     {% endif %}
     <div class="spacer"></div>
     <p>
-      There are <span class="highlight h-mag">{{ total_nodes }}</span> {{ nettype }} {{ crypto | capitalize }} nodes in the database but <span class="highlight h-cya">{{ nodes_all }}</span> nodes shown with the current filters.
+      There are <span class="highlight h-mag">{{ total_nodes }}</span> {{ nettype }} {{ crypto | capitalize }} nodes in the database but <span class="highlight h-cya">{{ nodes_all }}</span> nodes stored with the current filters.
     </p>
     <p>
       Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
