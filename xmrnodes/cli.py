@@ -181,56 +181,67 @@ def get_peers():
 
 @bp.cli.command("validate")
 def validate():
-    nodes = Node.select().where(Node.validated == False)
-    for node in nodes:
-        now = datetime.utcnow()
-        logging.info(f"Attempting to validate {node.url}")
-        try:
-            r = make_request(node.url)
-            assert "height" in r.json()
-            assert "nettype" in r.json()
-            has_cors = "Access-Control-Allow-Origin" in r.headers
-            is_ssl = node.url.startswith("https://")
-            nettype = r.json()["nettype"]
-            crypto = determine_crypto(node.url)
-            if nettype in ["mainnet", "stagenet", "testnet"]:
-                node.nettype = nettype
-                node.available = True
-                node.validated = True
-                node.web_compatible = has_cors and is_ssl
-                node.last_height = r.json()["height"]
-                node.datetime_checked = now
-                node.crypto = crypto
-                node.is_tor = is_onion(node.url)
-                node.is_i2p = is_i2p(node.url)
-                if not node.is_tor and not node.is_i2p:
-                    geoip = get_geoip(node.url)
-                    node.country_name = geoip.country.name
-                    node.country_code = geoip.country.iso_code
-                    node.city = geoip.city.name
-                    node.postal = geoip.postal.code
-                    node.lat = geoip.location.latitude
-                    node.lon = geoip.location.longitude
-                    logging.info(f"found geo data for {node.url} - {node.country_code}, {node.country_name}, {node.city}")
-                node.save()
-                logging.info("success")
+    nodes = Node.select().where(Node.validated == False).limit(50)
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(validate_node, node): node for node in nodes}
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                logging.error(f"{futures[future].url} - unexpected error: {e}")
+
+def validate_node(node):
+    url = node.url
+    now = datetime.utcnow()
+    try:
+        r = make_request(url)
+        assert "height" in r.json()
+        assert "nettype" in r.json()
+        has_cors = "Access-Control-Allow-Origin" in r.headers
+        is_ssl = url.startswith("https://")
+        nettype = r.json()["nettype"]
+        crypto = determine_crypto(url)
+        if nettype in ["mainnet", "stagenet", "testnet"]:
+            node.nettype = nettype
+            node.available = True
+            node.validated = True
+            node.web_compatible = has_cors and is_ssl
+            node.last_height = r.json()["height"]
+            node.datetime_checked = now
+            node.crypto = crypto
+            node.is_tor = is_onion(url)
+            node.is_i2p = is_i2p(url)
+            if not node.is_tor and not node.is_i2p:
+                geoip = get_geoip(url)
+                node.country_name = geoip.country.name
+                node.country_code = geoip.country.iso_code
+                node.city = geoip.city.name
+                node.postal = geoip.postal.code
+                node.lat = geoip.location.latitude
+                node.lon = geoip.location.longitude
+                logging.info(f"{url} - validated ({node.country_code}, {node.city})")
             else:
-                logging.info("unexpected nettype")
-        except requests.exceptions.ConnectTimeout:
-            logging.info("connection timed out")
-            node.delete_instance()
-        except requests.exceptions.SSLError:
-            logging.info("invalid certificate")
-            node.delete_instance()
-        except requests.exceptions.ConnectionError:
-            logging.info("connection error")
-            node.delete_instance()
-        except requests.exceptions.HTTPError:
-            logging.info("http error, 4xx or 5xx")
-            node.delete_instance()
-        except Exception as e:
-            logging.info(f"failed for reasons unknown: {e}")
-            node.delete_instance()
+                logging.info(f"{url} - validated")
+            node.save()
+        else:
+            logging.info(f"{url} - unexpected nettype: {nettype}")
+    except requests.exceptions.ConnectTimeout:
+        logging.info(f"{url} - connection timed out, deleting")
+        node.delete_instance()
+    except requests.exceptions.SSLError:
+        logging.info(f"{url} - invalid certificate, deleting")
+        node.delete_instance()
+    except requests.exceptions.ConnectionError:
+        logging.info(f"{url} - connection error, deleting")
+        node.delete_instance()
+    except requests.exceptions.HTTPError:
+        logging.info(f"{url} - http error, deleting")
+        node.delete_instance()
+    except Exception as e:
+        logging.info(f"{url} - failed ({e}), deleting")
+        node.delete_instance()
 
 
 @bp.cli.command("export")
