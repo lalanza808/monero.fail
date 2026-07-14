@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from time import sleep
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import geoip2.database
 import arrow
@@ -39,11 +40,15 @@ def check_nodes():
     ).order_by(
         Node.datetime_checked.asc()
     ).limit(20)
-    for node in nodes:
-        try:
-            check_node(node.url)
-        except KeyboardInterrupt:
-            exit()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(check_node, node.url): node for node in nodes}
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except KeyboardInterrupt:
+                exit()
+            except Exception as e:
+                logging.error(f"Error checking {futures[future].url}: {e}")
 
 def check_node(_node):
     if _node.startswith("http"):
@@ -51,20 +56,20 @@ def check_node(_node):
     else:
         node = Node.select().where(Node.id == _node).first()
     if not node:
-        logging.info('{_node} not found')
+        logging.info(f'{_node} not found')
         pass
+    url = node.url
     now = datetime.utcnow()
     hc = HealthCheck(node=node, health=False)
-    logging.info(f"[+] Checking {node.url}")
     try:
-        r = make_request(node.url)
+        r = make_request(url)
         assert "status" in r.json()
         assert "offline" in r.json()
         assert "height" in r.json()
         if "donation_address" in r.json():
             node.donation_address = r.json()["donation_address"]
         has_cors = "Access-Control-Allow-Origin" in r.headers
-        is_ssl = node.url.startswith("https://")
+        is_ssl = url.startswith("https://")
         if r.json()["status"] == "OK":
             node.web_compatible = has_cors and is_ssl
             node.last_height = r.json()["height"]
@@ -73,14 +78,14 @@ def check_node(_node):
             healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
             if r.json()["height"] < healthy_block:
                 node.available = False
-                logging.info("unhealthy")
+                logging.info(f"{url} - unhealthy (behind {highest_block - r.json()['height']} blocks)")
             else:
                 node.available = True
-                logging.info("success")
+                logging.info(f"{url} - ok")
         else:
             raise
     except Exception as e:
-        logging.info(f"  [!] Unhealthy: {e.__class__.__name__}")
+        logging.info(f"{url} - failed ({e.__class__.__name__})")
         node.datetime_checked = now
         node.datetime_failed = now
         node.available = False
@@ -90,23 +95,21 @@ def check_node(_node):
     hc.save()
     failed_checks = node.get_failed_checks().count()
     all_checks = node.get_all_checks().count()
-    logging.info(f"  [.] {node.url} failed {failed_checks} out of {all_checks}")
-    if failed_checks == all_checks and all_checks > 5:
-        # delete failing nodes
-        logging.info(f"  [!] {node.url} fails all of its health checks - deleting it!")
+    if failed_checks == all_checks and all_checks > 15:
+        logging.info(f"{url} - deleting (failed all {all_checks} checks)")
         for _hc in node.get_all_checks():
             _hc.delete_instance()
         node.delete_instance()
     else:
-        # delete old healthchecks
+        # delete old healthchecks (only successful ones to preserve failure history)
         diff = now - timedelta(hours=240)
         hcs = 0
         for hc in node.healthchecks:
-            if hc.datetime <= diff:
+            if hc.datetime <= diff and hc.health == True:
                 hcs += 1
                 hc.delete_instance()
         if hcs:
-            logging.info(f"  [.] Deleted {hcs} old healthchecks for {node.url}")
+            logging.info(f"{url} - pruned {hcs} old healthchecks")
 
 def upsert_peer(peer):
     exists = Peer.select().where(Peer.url == peer).first()
