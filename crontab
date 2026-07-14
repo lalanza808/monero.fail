@@ -1,4 +1,9 @@
-*/3 * * * * sh -c "cd ~/monero.fail; ./manage.sh validate"
-30 */4 * * * sh -c "cd ~/monero.fail; ./manage.sh check"
-0 0 * * * sh -c "cd ~/monero.fail; ./manage.sh export"
-*/5 * * * * sh -c "cd ~/monero.fail; ./manage.sh get_peers"
+HOME=/home/monero
+
+0 */2 * * * /usr/bin/sqlite3 $HOME/monero.fail/data/sqlite.db 'VACUUM;'
+0 */2 * * * /usr/bin/sqlite3 $HOME/monero.fail/data/sqlite.db 'PRAGMA wal_checkpoint(truncate);'
+30 */2 * * * sh -c "cd $HOME/monero.fail; ./manage.sh validate 2>&1 | tee -a $HOME/validate.log"
+*/10 * * * * sh -c "cd $HOME/monero.fail; ./manage.sh check 2>&1 | tee -a $HOME/check.log"
+20 0 3 * * sh -c "cd $HOME/monero.fail; ./manage.sh export"
+*/30 * * * * sh -c "cd $HOME/monero.fail; ./manage.sh get_peers 2>&1 | tee -a $HOME/peers.log"
+30 */2 * * * sh -c "cd $HOME/monero.fail; ./manage.sh html; cp data/offline.html /var/www/monero.fail/index.html"
