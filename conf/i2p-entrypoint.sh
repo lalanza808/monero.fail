@@ -1,9 +1,10 @@
 #!/bin/bash
 
-chown -R i2p:i2p /home/i2p
+chown -R i2pd:i2pd /var/lib/i2pd
 
 # Run i2pd
-sudo -u i2p i2pd \
+sudo -u i2pd i2pd \
+    --loglevel=error \
     --httpproxy.enabled 1 \
     --httpproxy.address 0.0.0.0 \
     --httpproxy.port 4444

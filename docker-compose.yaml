@@ -1,4 +1,3 @@
-version: '3'
 x-log-config: &log-config
   logging:
     driver: json-file
