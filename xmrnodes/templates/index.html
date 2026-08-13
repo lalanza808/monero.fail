@@ -62,6 +62,7 @@
             <option value="cors" {% if request.args.get('type') == 'cors' %}selected{% endif %}>CORS</option>
             <option value="onion" {% if request.args.get('type') == 'onion' %}selected{% endif %}>Onion</option>
             <option value="i2p" {% if request.args.get('type') == 'i2p' %}selected{% endif %}>I2P</option>
+            <option value="ipv6" {% if request.args.get('type') == 'ipv6' %}selected{% endif %}>IPv6</option>
           </select>
         </span>
       </div>
