@@ -94,6 +94,20 @@ def is_onion(url: str):
     else:
         return False
 
+def has_ipv6(url: str):
+    """Check if a host supports IPv6 by resolving AAAA records."""
+    host = urlparse(url).hostname
+    if not host:
+        return False
+    # Bracketed IPv6 addresses are inherently IPv6
+    if ":" in host:
+        return True
+    try:
+        results = socket.getaddrinfo(host, None, socket.AF_INET6)
+        return len(results) > 0
+    except (socket.gaierror, OSError):
+        return False
+
 def retrieve_peers(host, port):
     try:
         sock = socket.create_connection((host, int(port)), timeout=5)

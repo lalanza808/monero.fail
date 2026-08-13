@@ -7,11 +7,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import geoip2.database
 import arrow
 import requests
+from peewee import BooleanField
 from flask import Blueprint
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, make_request
+from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, has_ipv6, make_request
 from xmrnodes.helpers import retrieve_peers, get_highest_block, get_geoip, get_nodes
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
@@ -21,7 +22,18 @@ bp = Blueprint("cli", "cli", cli_group=None)
 
 @bp.cli.command("init")
 def init():
-    pass
+    from playhouse.migrate import SqliteMigrator, migrate
+    from xmrnodes.models import db
+    migrator = SqliteMigrator(db)
+    # Add is_ipv6 column if it doesn't exist
+    columns = [col.name for col in db.get_columns("node")]
+    if "is_ipv6" not in columns:
+        migrate(
+            migrator.add_column("node", "is_ipv6", BooleanField(default=False)),
+        )
+        logging.info("Added is_ipv6 column to node table")
+    else:
+        logging.info("Migration already applied")
 
 @bp.cli.command("html")
 def html():
@@ -91,6 +103,7 @@ def check_node(_node):
         node.available = False
         hc.health = False
     node.datetime_checked = now
+    node.is_ipv6 = has_ipv6(url)
     node.save()
     hc.save()
     failed_checks = node.get_failed_checks().count()
@@ -213,6 +226,7 @@ def validate_node(node):
             node.crypto = crypto
             node.is_tor = is_onion(url)
             node.is_i2p = is_i2p(url)
+            node.is_ipv6 = has_ipv6(url)
             if not node.is_tor and not node.is_i2p:
                 geoip = get_geoip(url)
                 node.country_name = geoip.country.name
@@ -221,7 +235,8 @@ def validate_node(node):
                 node.postal = geoip.postal.code
                 node.lat = geoip.location.latitude
                 node.lon = geoip.location.longitude
-                logging.info(f"{url} - validated ({node.country_code}, {node.city})")
+                ipv6_tag = ", IPv6" if node.is_ipv6 else ""
+                logging.info(f"{url} - validated ({node.country_code}, {node.city}{ipv6_tag})")
             else:
                 logging.info(f"{url} - validated")
             node.save()

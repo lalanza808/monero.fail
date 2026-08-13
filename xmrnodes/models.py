@@ -15,6 +15,7 @@ class Node(Model):
     url = CharField(unique=True)
     is_tor = BooleanField(default=False)
     is_i2p = BooleanField(default=False)
+    is_ipv6 = BooleanField(default=False)
     available = BooleanField(default=False)
     validated = BooleanField(default=False)
     web_compatible = BooleanField(default=False)

@@ -19,14 +19,14 @@ def nodes_json():
             "clear": [n.url for n in xmr_nodes if n.is_tor == False and n.is_i2p == False],
             "onion": [n.url for n in xmr_nodes if n.is_tor == True],
             "i2p": [n.url for n in xmr_nodes if n.is_i2p == True],
-            "ipv6": [n.url for n in xmr_nodes if "[" in n.url],
+            "ipv6": [n.url for n in xmr_nodes if n.is_ipv6 == True],
             "web_compatible": [n.url for n in xmr_nodes if n.web_compatible == True],
         },
         "wownero": {
             "clear": [n.url for n in wow_nodes if n.is_tor == False and n.is_i2p == False],
             "onion": [n.url for n in wow_nodes if n.is_tor == True],
             "i2p": [n.url for n in wow_nodes if n.is_i2p == True],
-            "ipv6": [n.url for n in wow_nodes if "[" in n.url],
+            "ipv6": [n.url for n in wow_nodes if n.is_ipv6 == True],
             "web_compatible": [n.url for n in wow_nodes if n.web_compatible == True],
         }
     })

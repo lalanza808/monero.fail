@@ -55,7 +55,7 @@ def index():
         nodes = nodes.where(Node.web_compatible == True)
         web_compatible = True
     elif node_type == "ipv6":
-        nodes = nodes.where(Node.url.contains("["))
+        nodes = nodes.where(Node.is_ipv6 == True)
     else:
         nodes = nodes.where(Node.is_i2p == False, Node.is_tor == False)
 
