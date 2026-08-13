@@ -20,3 +20,8 @@ dependencies = [
 
 [tool.uv.sources]
 py-levin = { url = "https://github.com/lalanza808/py-levin/archive/refs/heads/master.zip" }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
