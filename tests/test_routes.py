@@ -81,7 +81,7 @@ class TestAddNode:
         client.post("/add", data={"node_url": "HTTP://Node.Example.COM:18081"}, follow_redirects=True)
         assert Node.select().where(Node.url == "http://node.example.com:18081").exists()
 
-    def test_add_ipv6_currently_rejected(self, client):
-        """IPv6 is not yet supported. After refactor this should be accepted."""
+    def test_add_ipv6_accepted(self, client):
+        """IPv6 URLs are now accepted."""
         resp = client.post("/add", data={"node_url": "http://[2001:db8::1]:18081"}, follow_redirects=True)
-        assert Node.select().count() == 0
+        assert Node.select().where(Node.url == "http://[2001:db8::1]:18081").exists()

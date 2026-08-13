@@ -154,27 +154,40 @@ class TestGetGeoip:
     """Tests for GeoIP resolution."""
 
     @patch("xmrnodes.helpers.geoip2.database.Reader")
-    @patch("xmrnodes.helpers.socket.gethostbyname")
+    @patch("xmrnodes.helpers.socket.getaddrinfo")
     def test_resolves_fqdn(self, mock_dns, mock_reader):
         from xmrnodes.helpers import get_geoip
-        mock_dns.return_value = "93.184.216.34"
+        mock_dns.return_value = [(None, None, None, None, ("93.184.216.34", 0))]
         mock_reader_instance = MagicMock()
         mock_reader.return_value.__enter__ = MagicMock(return_value=mock_reader_instance)
         mock_reader.return_value.__exit__ = MagicMock(return_value=False)
 
         get_geoip("http://example.com:18081")
-        mock_dns.assert_called_once_with("example.com")
+        mock_dns.assert_called_once_with("example.com", None)
         mock_reader_instance.city.assert_called_once_with("93.184.216.34")
 
     @patch("xmrnodes.helpers.geoip2.database.Reader")
-    @patch("xmrnodes.helpers.socket.gethostbyname")
+    @patch("xmrnodes.helpers.socket.getaddrinfo")
     def test_ipv4_direct(self, mock_dns, mock_reader):
         from xmrnodes.helpers import get_geoip
-        mock_dns.return_value = "1.2.3.4"
+        mock_dns.return_value = [(None, None, None, None, ("1.2.3.4", 0))]
         mock_reader_instance = MagicMock()
         mock_reader.return_value.__enter__ = MagicMock(return_value=mock_reader_instance)
         mock_reader.return_value.__exit__ = MagicMock(return_value=False)
 
         get_geoip("http://1.2.3.4:18081")
-        mock_dns.assert_called_once_with("1.2.3.4")
+        mock_dns.assert_called_once_with("1.2.3.4", None)
         mock_reader_instance.city.assert_called_once_with("1.2.3.4")
+
+    @patch("xmrnodes.helpers.geoip2.database.Reader")
+    @patch("xmrnodes.helpers.socket.getaddrinfo")
+    def test_ipv6_direct(self, mock_dns, mock_reader):
+        from xmrnodes.helpers import get_geoip
+        mock_dns.return_value = [(None, None, None, None, ("2001:db8::1", 0, 0, 0))]
+        mock_reader_instance = MagicMock()
+        mock_reader.return_value.__enter__ = MagicMock(return_value=mock_reader_instance)
+        mock_reader.return_value.__exit__ = MagicMock(return_value=False)
+
+        get_geoip("http://[2001:db8::1]:18081")
+        mock_dns.assert_called_once_with("2001:db8::1", None)
+        mock_reader_instance.city.assert_called_once_with("2001:db8::1")

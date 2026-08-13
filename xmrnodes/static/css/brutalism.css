@@ -150,6 +150,11 @@ select[multiple] {
     color: #000;
 }
 
+.alert-success {
+    background-color: #d4edda;
+    color: #000;
+}
+
 .alert-danger {
     background-color: #f8d7da;
     color: #000;

@@ -12,7 +12,8 @@ CURRENT_REGEX = re.compile(
     r"^(?:http)s?://"
     r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"
     r"localhost|"
-    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+    r"\[[\da-fA-F:.]+\])"
     r"(?::\d+)?"
     r"(?:/?|[/?]\S+)$",
     re.IGNORECASE,
@@ -90,9 +91,9 @@ class TestCurrentRegexRejects:
         "http://[2001:db8::1]:18081",
         "https://[2604:a880:2:d0::1]:18089",
     ])
-    def test_ipv6_rejected_currently(self, url):
-        """IPv6 URLs are currently rejected. After refactor these should pass."""
-        assert not CURRENT_REGEX.match(url)
+    def test_ipv6_accepted(self, url):
+        """IPv6 URLs are now accepted."""
+        assert CURRENT_REGEX.match(url)
 
 
 class TestCurrentRegexKnownBugs:

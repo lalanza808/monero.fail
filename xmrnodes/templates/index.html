@@ -25,11 +25,11 @@
     {% endfor %}
     </ul>
   </form>
-  {% with messages = get_flashed_messages() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="spacer">
-      {% for message in messages %}
-        <p class="alert alert-warning">{{ message }}</p>
+      {% for category, message in messages %}
+        <p class="alert alert-{{ 'warning' if category == 'message' else category }}">{{ message }}</p>
       {% endfor %}
     </div>
     {% endif %}

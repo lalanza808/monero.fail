@@ -96,9 +96,7 @@ def is_onion(url: str):
 
 def retrieve_peers(host, port):
     try:
-        sock = socket.socket()
-        sock.settimeout(5)
-        sock.connect((host, int(port)))
+        sock = socket.create_connection((host, int(port)), timeout=5)
     except Exception as e:
         return None
 
@@ -126,7 +124,12 @@ def retrieve_peers(host, port):
 
             for peer in _peers:
                 try:
-                    peers.append("http://%s:%d" % (peer["ip"].ip, peer["port"].value))
+                    ip = peer["ip"].ip
+                    port_val = peer["port"].value
+                    if ":" in ip:
+                        peers.append("http://[%s]:%d" % (ip, port_val))
+                    else:
+                        peers.append("http://%s:%d" % (ip, port_val))
                 except:
                     pass
 
@@ -154,11 +157,11 @@ def get_highest_block(nettype, crypto):
 
 
 def get_geoip(ip_or_dns):
-    host = urlparse(ip_or_dns).netloc.split(':')[0]
-    resolved = socket.gethostbyname(host)
-    host = host if resolved == host else resolved
+    host = urlparse(ip_or_dns).hostname
+    results = socket.getaddrinfo(host, None)
+    resolved = results[0][4][0]
     with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as reader:
-        return reader.city(host)
+        return reader.city(resolved)
 
 def get_whois(ip_or_dns):
     pass
