@@ -25,26 +25,25 @@ def migrate():
     from playhouse.migrate import SqliteMigrator, migrate
     from xmrnodes.models import db
     migrator = SqliteMigrator(db)
-    # Add state column if it doesn't exist
-    for table in ["node", "peer"]:
-        columns = [col.name for col in db.get_columns(table)]
-        if "state" not in columns:
-            migrate(
-                migrator.add_column(table, "state", CharField(null=True)),
-            )
-            logging.info(f"Added state column to {table} table")
-        else:
-            logging.info("Migration already applied")
+    # for table in ["node", "peer"]:
+    #     columns = [col.name for col in db.get_columns(table)]
+    #     if "state" not in columns:
+    #         migrate(
+    #             migrator.add_column(table, "state", CharField(null=True)),
+    #         )
+    #         logging.info(f"Added state column to {table} table")
+    #     else:
+    #         logging.info("Migration already applied")
     
-    for node in Node.select().where(Node.is_tor == False, Node.is_i2p == False):
-        try:
-            geodata = get_geoip(node.url)
-            if geodata.subdivisions.most_specific.name:
-                node.state = geodata.subdivisions.most_specific.name
-                node.save()
-                print(f"Updated GeoIP {node.url}")
-        except Exception as e:
-            print(f"Failed to update {node.url}: {e}")
+    # for node in Node.select().where(Node.is_tor == False, Node.is_i2p == False):
+    #     try:
+    #         geodata = get_geoip(node.url)
+    #         if geodata.subdivisions.most_specific.name:
+    #             node.state = geodata.subdivisions.most_specific.name
+    #             node.save()
+    #             print(f"Updated GeoIP {node.url}")
+    #     except Exception as e:
+    #         print(f"Failed to update {node.url}: {e}")
 
 
 @bp.cli.command("html")
