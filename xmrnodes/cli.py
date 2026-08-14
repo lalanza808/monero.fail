@@ -49,7 +49,7 @@ def rescan():
                 node.lat = lat
             if lon != node.lon:
                 print(f"changing {node.url} lon: {node.lon} -> {lon}")
-                node.lon = long
+                node.lon = lon
             node.save()
         except Exception as e:
             print(f"Failed to update {node.url}: {e}")
