@@ -20,6 +20,40 @@ from xmrnodes import config
 bp = Blueprint("cli", "cli", cli_group=None)
 
 
+@bp.cli.command("rescan")
+def rescan():
+    for node in Node.select().where(Node.is_tor == False, Node.is_i2p == False):
+        try:
+            geodata = get_geoip(node.url)
+            city = geodata.city.name
+            state = geodata.subdivisions.most_specific.name
+            country_code = geodata.country.iso_code
+            country_name = geodata.country.name
+            lat = geodata.location.latitude
+            lon = geodata.location.longitude
+
+            if city != node.city:
+                print(f"changing {node.url} city: {node.city} -> {city}")
+                node.city = city
+            if state != node.state:
+                print(f"changing {node.url} state: {node.state} -> {state}")
+                node.state = state
+            if country_code != node.country_code:
+                print(f"changing {node.url} country_code: {node.country_code} -> {country_code}")
+                node.country_code = country_code
+            if country_name != node.country_name:
+                print(f"changing {node.url} country_name: {node.country_name} -> {country_name}")
+                node.country_name = country_name
+            if lat != node.lat:
+                print(f"changing {node.url} lat: {node.lat} -> {lat}")
+                node.lat = lat
+            if lon != node.lon:
+                print(f"changing {node.url} lon: {node.lon} -> {lon}")
+                node.lon = long
+            node.save()
+        except Exception as e:
+            print(f"Failed to update {node.url}: {e}")
+
 @bp.cli.command("migrate")
 def migrate():
     from playhouse.migrate import SqliteMigrator, migrate
