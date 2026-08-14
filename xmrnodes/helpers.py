@@ -2,6 +2,7 @@ import sys
 import socket
 import pickle
 from os import path
+from math import radians, cos, sin, asin, sqrt
 
 import geoip2.database
 from requests import get as r_get
@@ -184,3 +185,15 @@ def get_whois(ip_or_dns):
 # asn_cidr
 # asn_country_code
 # asn_description
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    """Calculate the great-circle distance (km) between two points."""
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    return 6371 * 2 * asin(sqrt(a))

@@ -1,6 +1,6 @@
 import re
 from random import shuffle, seed
-from math import ceil, radians, cos, sin, asin, sqrt
+from math import ceil
 from datetime import timedelta
 
 import arrow
@@ -8,22 +8,11 @@ from flask import request, redirect, Blueprint
 from flask import render_template, flash, Response, jsonify
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import get_highest_block
+from xmrnodes.helpers import get_highest_block, haversine
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, Peer
 from xmrnodes import config
 
-
-def haversine(lat1, lon1, lat2, lon2):
-    """Calculate the great-circle distance (km) between two points."""
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    return 6371 * 2 * asin(sqrt(a))
 
 bp = Blueprint("meta", "meta")
 
