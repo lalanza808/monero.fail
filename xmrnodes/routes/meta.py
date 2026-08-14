@@ -27,6 +27,8 @@ def index():
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
     node_type = request.args.get("type", "all")
+    country_code = request.args.get("country")
+    city = request.args.get("city")
     web_compatible = False
 
     # Validate and limit page number
@@ -42,6 +44,11 @@ def index():
     )
 
     total_nodes = nodes.count()
+
+    if country_code:
+        nodes = nodes.where(Node.country_code == country_code)
+    elif city:
+        nodes = nodes.where(Node.city == city)
 
     if node_type == "clear":
         nodes = nodes.where(
@@ -240,7 +247,7 @@ def find_nearby():
     except (TypeError, ValueError):
         return jsonify({"error": "lat and lon query parameters are required"}), 400
 
-    limit = min(int(request.args.get("limit", 10)), 100)
+    limit = min(int(request.args.get("limit", 50)), 100)
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
 

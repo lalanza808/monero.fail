@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-
-
 {% block warning %}
 {% endblock %}
 
@@ -9,8 +7,9 @@
 <link rel="preload stylesheet" href="/static/css/vendor/ol.css" type="text/css">
 <script src="/static/js/vendor/ol.js"></script>
 <script src="/static/js/vendor/jquery.min.js"></script>
-<div class="box">
-  <p>Total Peers: {{ recent_peers }}</p>
+
+<article class="card" style="margin-bottom: 1rem;">
+  <p>Total Peers: <span class="badge" data-variant="secondary">{{ recent_peers }}</span></p>
   <p>Source Node: <strong>{{ source_node }}</strong></p>
   <p>
     This is not a full representation of the entire Monero network,
@@ -20,14 +19,16 @@
   <p>
     The map is currently showing {{ shown_peers }} peers seen in the past 72 hours.
   </p>
-  <p><span id="selectedNode" class="highlight h-cya">Click a node below to see connection details.</span></p>
+  <p><span id="selectedNode" class="badge">Click a node below to see connection details.</span></p>
+</article>
+
+<div id="loadingContainer" style="text-align: center; margin: 2rem 0;">
+  <h3>Loading map... <span id="loadProgress"></span></h3>
+  <img id="loading" src="/static/images/helping.gif" style="width: 30%; max-width: 300px;" />
 </div>
-<div id="loadingContainer">
-    <h1>Loading map... <span id="loadProgress"></span></h1>
-    <img id="loading" src="/static/images/helping.gif" style="width: 30%;" />
-  </div>
-  <div id="map" class="map"></div>
-  <div id="popup" class="popup" title="Welcome to OpenLayers"></div>
+
+<div id="map" style="height: 600px; border: 1px solid var(--border); border-radius: 4px;"></div>
+
 <script>
   async function fetchWithDelay(total, delayMs) {
     for(let i=0; i < total + 1; i++) {
@@ -64,14 +65,11 @@
         console.error(`Error on request ${i}`);
       }
     }
-    // Remove loader and show map
     document.getElementById('loadingContainer').remove();
     document.getElementById('map').style['opacity'] = 1;
   }
 
   async function loadMap() {
-
-    // Marker layer
     markerLayer = new ol.layer.Vector({
       source: new ol.source.Vector({
         features: [],
@@ -79,7 +77,6 @@
       })
     });
 
-    // Create the map
     var map = new ol.Map({
       target: 'map',
       layers: [
@@ -97,19 +94,16 @@
       })
     });
 
-    // Fetch paginated nodes
     const res = await fetch('?fetch=1')
       .then((res) => res.json());
 
     fetchWithDelay(res.total, 300);
 
-    // Setup popup
     var popup = new ol.Overlay({
       element: $('#popup')[0],
     });
     map.addOverlay(popup);
 
-    // Show details on each pixel
     map.on("click", function(e) {
       var element = popup.getElement();
       map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
@@ -120,7 +114,6 @@
     });
   }
 
-  // Wait for full load
   addEventListener("DOMContentLoaded", (event) => {
     document.getElementById('map').style['opacity'] = 0;
     setTimeout(function() {
@@ -128,5 +121,5 @@
     }, 500);
   });
 </script>
-
+<div id="popup" class="popup" title="Welcome to OpenLayers"></div>
 {% endblock %}
