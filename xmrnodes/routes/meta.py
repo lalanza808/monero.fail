@@ -29,6 +29,7 @@ def index():
     node_type = request.args.get("type", "all")
     country_code = request.args.get("country")
     city = request.args.get("city")
+    state = request.args.get("state")
     web_compatible = False
 
     # Validate and limit page number
@@ -47,6 +48,8 @@ def index():
 
     if city:
         nodes = nodes.where(Node.city == city)
+    elif state:
+        nodes = nodes.where(Node.state == state)
     elif country_code:
         nodes = nodes.where(Node.country_code == country_code)
 

@@ -139,6 +139,7 @@
               <br />
               <p style="font-size: 0.8em; color: rgba(34, 34, 34, 0.9);">
                 {% if node.city %}<a href="{{ request.path }}?{{ request.args | urlencode }}&city={{ node.city }}#nodes">{{ node.city }}</a>, {% endif %}
+                {% if node.state %}<a href="{{ request.path }}?{{ request.args | urlencode }}&state={{ node.state }}#nodes">{{ node.state }}</a>, {% endif %}
                 {% if node.country_name %}<a href="{{ request.path }}?{{ request.args | urlencode }}&country={{ node.country_code }}#nodes">{{ node.country_name }}</a>{% endif %}
               </p>
             </td>
