@@ -36,7 +36,7 @@
   {% endwith %}
 </div>
 <div id="findnodes" class="box">
-  <h2>Find a Node</h2>
+  <h2>Nodes</h2>
   <div id="filters">
     <form>
       <div class="row">
@@ -92,6 +92,9 @@
     <p>
       Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
     </p>
+    <h2>
+      To find nodes located closest to you, go to <a href="/find">Find Nodes</a>.
+    </h2>
     <p>
       Showing healthy nodes {{ start_index}}-{{ end_index }} of {{ nodes_healthy }} total.
     </p>

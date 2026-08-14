@@ -242,7 +242,6 @@ def haproxy():
 def find():
     return render_template("find.html")
 
-
 @bp.route("/find/nearby")
 def find_nearby():
     """Return nodes sorted by distance from a given lat/lon."""
@@ -252,7 +251,7 @@ def find_nearby():
     except (TypeError, ValueError):
         return jsonify({"error": "lat and lon query parameters are required"}), 400
 
-    limit = min(int(request.args.get("limit", 20)), 100)
+    limit = min(int(request.args.get("limit", 10)), 100)
     nettype = request.args.get("network", "mainnet")
     crypto = request.args.get("chain", "monero")
 
@@ -284,6 +283,7 @@ def find_nearby():
             "lon": node.lon,
             "last_height": node.last_height,
             "web_compatible": node.web_compatible,
+            "is_ipv6": node.is_ipv6,
         })
 
     results.sort(key=lambda x: x["distance_km"])
