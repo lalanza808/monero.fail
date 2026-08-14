@@ -5,13 +5,14 @@ from datetime import timedelta
 
 import arrow
 from flask import request, redirect, Blueprint
-from flask import render_template, flash, Response
+from flask import render_template, flash, Response, jsonify
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import get_highest_block
+from xmrnodes.helpers import get_highest_block, haversine
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, Peer
 from xmrnodes import config
+
 
 bp = Blueprint("meta", "meta")
 
@@ -224,3 +225,55 @@ def haproxy():
         "Content-Disposition"
     ] = f'attachment; filename="haproxy-{crypto}-{nettype}-cors_{cors}-tor_{tor}.cfg"'
     return res
+
+
+@bp.route("/find")
+def find():
+    return render_template("find.html")
+
+@bp.route("/find/nearby")
+def find_nearby():
+    """Return nodes sorted by distance from a given lat/lon."""
+    try:
+        lat = float(request.args.get("lat"))
+        lon = float(request.args.get("lon"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "lat and lon query parameters are required"}), 400
+
+    limit = min(int(request.args.get("limit", 10)), 100)
+    nettype = request.args.get("network", "mainnet")
+    crypto = request.args.get("chain", "monero")
+
+    highest_block = get_highest_block(nettype, crypto)
+    healthy_block = highest_block - config.HEALTHY_BLOCK_DIFF
+
+    nodes = Node.select().where(
+        Node.validated == True,
+        Node.available == True,
+        Node.nettype == nettype,
+        Node.crypto == crypto,
+        Node.lat.is_null(False),
+        Node.lon.is_null(False),
+        Node.is_tor == False,
+        Node.is_i2p == False,
+        Node.last_height > healthy_block,
+    )
+
+    results = []
+    for node in nodes:
+        dist = haversine(lat, lon, node.lat, node.lon)
+        results.append({
+            "url": node.url,
+            "distance_km": round(dist, 1),
+            "country_name": node.country_name,
+            "country_code": node.country_code,
+            "city": node.city,
+            "lat": node.lat,
+            "lon": node.lon,
+            "last_height": node.last_height,
+            "web_compatible": node.web_compatible,
+            "is_ipv6": node.is_ipv6,
+        })
+
+    results.sort(key=lambda x: x["distance_km"])
+    return jsonify({"nodes": results[:limit], "total": len(results)})

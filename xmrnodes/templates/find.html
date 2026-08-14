@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block warning %}
+{% endblock %}
+
+{% block content %}
+<link rel="preload stylesheet" href="/static/css/vendor/ol.css" type="text/css">
+<script src="/static/js/vendor/ol.js"></script>
+<style>
+  #find-map {
+    height: 450px;
+    margin: 1em 0;
+    cursor: crosshair;
+  }
+  #results-table {
+    width: 100%;
+    margin-top: 1em;
+  }
+  #results-table th, #results-table td {
+    padding: 6px 10px;
+    text-align: left;
+  }
+  .selected-info {
+    margin: 1em 0;
+    padding: 0.5em;
+    background: rgba(0, 255, 255, 0.2);
+  }
+  .ping-progress {
+    margin: 1em 0;
+    padding: 0.5em;
+    background: rgba(238, 111, 45, 0.15);
+  }
+  .latency-good { color: #00cd00; font-weight: bold; }
+  .latency-ok { color: #cc8800; font-weight: bold; }
+  .latency-bad { color: #cd0000; font-weight: bold; }
+  .latency-fail { color: #999; font-style: italic; }
+  #locate-btn {
+    margin: 0.5em 0;
+  }
+</style>
+
+<div class="box">
+  <h2>Find Nearby Nodes</h2>
+  <p>
+    Allow location access to automatically find the closest healthy Monero nodes,
+    or click anywhere on the map to select a region manually.
+    Each node is pinged from your browser to measure actual latency, and results are sorted by response time.
+  </p>
+  <p><strong>Note:</strong> Only CORS-enabled (web_compatible) nodes can be pinged from the browser. Non-CORS nodes are shown but cannot be measured.</p>
+  <button id="locate-btn" class="button">Use My Location</button>
+  <p class="selected-info">
+    <strong>Estimated Location:</strong> <span id="selected-coords">Not set - click the button or the map</span>
+  </p>
+</div>
+
+<div id="find-map" class="map"></div>
+
+<div id="ping-status" class="ping-progress" style="display:none;">
+  <strong>Pinging nodes...</strong> <span id="ping-progress-text">0 / 0</span>
+  <div style="text-align:center; margin-top:1em;">
+    <img id="ping-image" src="/static/images/sandwich.gif" style="max-width:200px;" />
+  </div>
+</div>
+
+<div id="results-container" style="display:none;">
+  <div class="box">
+    <h3>Nearest Nodes <span id="results-count"></span></h3>
+    <p>Sorted by ping latency (fastest first). Nodes that cannot be pinged are listed at the bottom.</p>
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Ping</th>
+          <th>Distance</th>
+          <th>City</th>
+          <th>Country</th>
+          <th>CORS</th>
+          <th>IPv6</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function() {
+  // --- Latency measurement (from ping.html pattern) ---
+  async function measureLatency(endpointUrl, samples) {
+    samples = samples || 3;
+    var pingOnce = async function() {
+      var start = performance.now();
+      try {
+        await fetch(endpointUrl, { method: 'GET', mode: 'cors', cache: 'no-store' });
+        return performance.now() - start;
+      } catch (err) {
+        return Infinity;
+      }
+    };
+
+    // Warm-up request (TCP/TLS handshake)
+    await pingOnce();
+
+    // Gather samples
+    var totalLatency = 0;
+    var successfulSamples = 0;
+    for (var i = 0; i < samples; i++) {
+      var latency = await pingOnce();
+      if (latency !== Infinity) {
+        totalLatency += latency;
+        successfulSamples++;
+      }
+    }
+    return successfulSamples > 0 ? Math.round(totalLatency / successfulSamples) : Infinity;
+  }
+
+  // --- Map setup ---
+  var markerSource = new ol.source.Vector({ features: [] });
+  var selectedSource = new ol.source.Vector({ features: [] });
+
+  var markerLayer = new ol.layer.Vector({
+    source: markerSource,
+    style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 6,
+        fill: new ol.style.Fill({ color: 'rgba(238, 111, 45, 0.8)' }),
+        stroke: new ol.style.Stroke({ color: '#000', width: 1 })
+      })
+    })
+  });
+
+  var selectedLayer = new ol.layer.Vector({
+    source: selectedSource,
+    style: new ol.style.Style({
+      image: new ol.style.Circle({
+        radius: 10,
+        fill: new ol.style.Fill({ color: 'rgba(0, 200, 0, 0.7)' }),
+        stroke: new ol.style.Stroke({ color: '#000', width: 2 })
+      })
+    })
+  });
+
+  var mapView = new ol.View({
+    center: ol.proj.fromLonLat([0, 25]),
+    minZoom: 2,
+    zoom: 4,
+    maxZoom: 12
+  });
+
+  var map = new ol.Map({
+    target: 'find-map',
+    layers: [
+      new ol.layer.Tile({ source: new ol.source.OSM(), preload: 2 }),
+      markerLayer,
+      selectedLayer
+    ],
+    view: mapView
+  });
+
+  // --- Core logic: fetch nodes + ping them ---
+  var currentSearch = 0; // debounce concurrent searches
+
+  async function searchNearby(lat, lon) {
+    var searchId = ++currentSearch;
+
+    document.getElementById('selected-coords').textContent = lat.toFixed(4) + ', ' + lon.toFixed(4);
+
+    // Place selected marker
+    selectedSource.clear();
+    var pt = ol.proj.fromLonLat([lon, lat]);
+    selectedSource.addFeature(new ol.Feature(new ol.geom.Point(pt)));
+
+    // Center map on selection
+    mapView.animate({ center: pt, zoom: 6, duration: 500 });
+
+    // Fetch nearby nodes from server
+    var res = await fetch('/find/nearby?lat=' + lat.toFixed(4) + '&lon=' + lon.toFixed(4) + '&limit=20');
+    var data = await res.json();
+
+    if (searchId !== currentSearch) return; // superseded
+
+    markerSource.clear();
+    var tbody = document.getElementById('results-body');
+    tbody.innerHTML = '';
+
+    document.getElementById('results-count').textContent =
+      '(showing ' + data.nodes.length + ' of ' + data.total + ' healthy nodes)';
+    document.getElementById('results-container').style.display = 'block';
+
+    // Build initial table (sorted by distance)
+    var rows = [];
+    data.nodes.forEach(function(node, idx) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-index', idx);
+      tr.innerHTML =
+        '<td><span class="address">' + node.url + '</span></td>' +
+        '<td id="ping-' + idx + '"><span class="latency-fail">--</span></td>' +
+        '<td>' + node.distance_km + ' km</td>' +
+        '<td>' + (node.city || '-') + '</td>' +
+        '<td>' + (node.country_name || '-') + '</td>' +
+        '<td>' + (node.web_compatible ? '<img src="/static/images/success.svg" class="filter-green" width="16">' : '<img src="/static/images/error.svg" class="filter-red" width="16">') + '</td>' +
+        '<td>' + (node.is_ipv6 ? '<img src="/static/images/success.svg" class="filter-green" width="16">' : '<img src="/static/images/error.svg" class="filter-red" width="16">') + '</td>';
+      tbody.appendChild(tr);
+      rows.push({ tr: tr, node: node, latency: Infinity, index: idx });
+
+      // Map marker
+      if (node.lat && node.lon) {
+        var f = new ol.Feature(new ol.geom.Point(ol.proj.fromLonLat([node.lon, node.lat])));
+        markerSource.addFeature(f);
+      }
+    });
+
+    // Ping CORS-enabled nodes
+    var corsNodes = rows.filter(function(r) { return r.node.web_compatible; });
+    if (corsNodes.length === 0) {
+      document.getElementById('ping-status').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('ping-status').style.display = 'block';
+    document.getElementById('ping-progress-text').textContent = '0 / ' + corsNodes.length;
+
+    var completed = 0;
+    // Ping up to N concurrently
+    var queue = corsNodes.slice();
+    var concurrency = 2;
+    var active = 0;
+
+    await new Promise(function(resolve) {
+      function next() {
+        if (searchId !== currentSearch) { resolve(); return; }
+        if (queue.length === 0 && active === 0) { resolve(); return; }
+        while (active < concurrency && queue.length > 0) {
+          active++;
+          var item = queue.shift();
+          (function(row) {
+            // Ping the node's /get_info endpoint
+            measureLatency(row.node.url + '/get_info', 2).then(function(ms) {
+              active--;
+              completed++;
+              row.latency = ms;
+
+              // Update cell
+              var cell = document.getElementById('ping-' + row.index);
+              if (ms === Infinity) {
+                cell.innerHTML = '<span class="latency-fail">timeout</span>';
+              } else if (ms < 200) {
+                cell.innerHTML = '<span class="latency-good">' + ms + ' ms</span>';
+              } else if (ms < 500) {
+                cell.innerHTML = '<span class="latency-ok">' + ms + ' ms</span>';
+              } else {
+                cell.innerHTML = '<span class="latency-bad">' + ms + ' ms</span>';
+              }
+
+              document.getElementById('ping-progress-text').textContent =
+                completed + ' / ' + corsNodes.length;
+
+              // Re-sort table after each ping completes
+              rows.sort(function(a, b) {
+                // CORS nodes with results first, sorted by latency
+                if (a.latency === Infinity && b.latency === Infinity) {
+                  return a.node.distance_km - b.node.distance_km;
+                }
+                if (a.latency === Infinity) return 1;
+                if (b.latency === Infinity) return -1;
+                return a.latency - b.latency;
+              });
+              rows.forEach(function(r) { tbody.appendChild(r.tr); });
+
+              next();
+            });
+          })(item);
+        }
+      }
+      next();
+    });
+
+    document.getElementById('ping-status').style.display = 'none';
+  }
+
+  // --- Map click handler ---
+  map.on('click', function(e) {
+    var coords = ol.proj.toLonLat(e.coordinate);
+    searchNearby(coords[1], coords[0]);
+  });
+
+  // --- Geolocation button ---
+  document.getElementById('locate-btn').addEventListener('click', function() {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    document.getElementById('selected-coords').textContent = 'Detecting location...';
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        searchNearby(pos.coords.latitude, pos.coords.longitude);
+      },
+      function(err) {
+        document.getElementById('selected-coords').textContent =
+          'Location denied - please click the map instead.';
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  });
+
+  // --- Auto-detect on page load ---
+  if (navigator.geolocation) {
+    document.getElementById('selected-coords').textContent = 'Detecting location...';
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        searchNearby(pos.coords.latitude, pos.coords.longitude);
+      },
+      function(err) {
+        document.getElementById('selected-coords').textContent =
+          'Location unavailable - click the map to select a region.';
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }
+})();
+</script>
+{% endblock %}
