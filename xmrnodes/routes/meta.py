@@ -45,10 +45,10 @@ def index():
 
     total_nodes = nodes.count()
 
-    if country_code:
-        nodes = nodes.where(Node.country_code == country_code)
-    elif city:
+    if city:
         nodes = nodes.where(Node.city == city)
+    elif country_code:
+        nodes = nodes.where(Node.country_code == country_code)
 
     if node_type == "clear":
         nodes = nodes.where(
