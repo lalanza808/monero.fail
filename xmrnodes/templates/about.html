@@ -1,48 +1,41 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div id="about" class="box">
-  <h2>What Is This Site?</h2>
+<article class="card">
+  <header>
+    <h3>What Is This Site?</h3>
+  </header>
   <p>
     This site is just a simple list of servers powering the cryptocurrency network of <a href="https://web.getmonero.org/get-started/what-is-monero/" target="_blank">Monero</a>, a private, digital currency (cryptocurrency).
   </p>
-  <h2>How Do I Use Monero?</h2>
+
+  <h4>How Do I Use Monero?</h4>
   <p>
     In order to send and receive Monero you need to have the software installed on either your phone or computer.
     Try out these solid open-source Monero projects:
   </p>
-  <p>
-    <a href="https://www.getmonero.org/downloads/" target="_blank">Official Community Funded Monero Software (desktop)</a>
-    <br />
-    <a href="https://featherwallet.org/" target="_blank">Feather (desktop)</a>
-    <br />
-    <a href="https://www.monerujo.io/" target="_blank">Monerujo (Android)</a>
-    <br />
-  </p>
-  <h2>How Do I Get Monero?</h2>
-  <p>
-    There are a few ways.
-  </p>
-  <p>
-    You can buy it from an exchange such as <a href="https://kraken.com" target="_blank">Kraken</a>.
-  </p>
-  <p>
-    You can also mine it if you have a fast enough computer. I wouldn't recommend buying a computer just for this unless you're really into that sort of thing.
-  </p>
-  <p>
-    You can also earn it by providing some sort of service or selling goods and merchandise. There are many plugins that allow you to run a web store that accepts Monero.
-  </p>
-  <h2>How Do I Run My Own Node?</h2>
+  <ul>
+    <li><a href="https://www.getmonero.org/downloads/" target="_blank">Official Community Funded Monero Software (desktop)</a></li>
+    <li><a href="https://featherwallet.org/" target="_blank">Feather (desktop)</a></li>
+    <li><a href="https://www.monerujo.io/" target="_blank">Monerujo (Android)</a></li>
+  </ul>
+
+  <h4>How Do I Get Monero?</h4>
+  <p>There are a few ways.</p>
+  <p>You can buy it from an exchange such as <a href="https://kraken.com" target="_blank">Kraken</a>.</p>
+  <p>You can also mine it if you have a fast enough computer. I wouldn't recommend buying a computer just for this unless you're really into that sort of thing.</p>
+  <p>You can also earn it by providing some sort of service or selling goods and merchandise. There are many plugins that allow you to run a web store that accepts Monero.</p>
+
+  <h4>How Do I Run My Own Node?</h4>
   <p>
     Running a node requires a little bit of technical ability. It won't earn you any money, but it improves the resilience of the network and is a great way to help out. Here are 2 great places to get started:
-    <p>
-      <a href="https://github.com/lalanza808/docker-monero-node" target="_blank">Turnkey Monero node by lalanza808</a>
-      <br />
-      <a href="https://sethforprivacy.com/guides/run-a-monero-node" target="_blank">Monero node guide by Seth Simmons</a>
-      <br />
-    </p>
   </p>
-  <h2>Isn't Cryptocurrency for Criminals?</h2>
+  <ul>
+    <li><a href="https://github.com/lalanza808/docker-monero-node" target="_blank">Turnkey Monero node by lalanza808</a></li>
+    <li><a href="https://sethforprivacy.com/guides/run-a-monero-node" target="_blank">Monero node guide by Seth Simmons</a></li>
+  </ul>
+
+  <h4>Isn't Cryptocurrency for Criminals?</h4>
   <p>
     No, but this is a common misconception.
     Cryptocurrencies are built by and for the people of the world in an attempt
@@ -50,10 +43,11 @@
     There is nothing wrong with people exchanging goods and services with one another
     and transacting with whatever they believe has value; this is a human right.
   </p>
-  <h2>Why Monero and not ____?</h2>
+
+  <h4>Why Monero and not ____?</h4>
   <p>
     Monero has a long history of being open, honest, professional, and community-focused.
-    It is built with first-class privacy features that protects it's users from snooping and blockchain analysis.
+    It is built with first-class privacy features that protects its users from snooping and blockchain analysis.
     The nature of most cryptocurrencies is that they use transparent ledgers,
     meaning anyone in the world can view your wallet balance and transactions;
     there is very little privacy focus.
@@ -62,5 +56,5 @@
     Monero is one of very few truly fungible,
     private cryptocurrencies that exist today.
   </p>
-</div>
+</article>
 {% endblock %}

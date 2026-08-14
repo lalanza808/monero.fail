@@ -2,166 +2,175 @@
 
 {% block content %}
 
-<div id="addnode" class="box">
-  <h2>Add A Node</h2>
-  <p>
-    You can also automate this process using <strong>curl</strong>
-  </p>
-  <code>curl -q -X POST https://monero.fail/add -d node_url="${NODE_URL}"</code>
+<article class="card" style="margin-bottom: 1.5rem;">
+  <header>
+    <h3>Add A Node</h3>
+    <p style="padding-bottom: px;">
+      Nodes will be scanned periodically. 
+      Geolocation and features will be identified during scanning (CORS, IPv6, Tor, I2P).
+    </p>
+  </header>
   <form method="POST" action="/add">
     {{ form.csrf_token }}
     {% for f in form %}
       {% if f.name != 'csrf_token' %}
-        <div class="form-group">
-          {{ f.label }}
+        <fieldset class="group">
           {{ f }}
-          <button type="submit" class="button">Submit</button>
-        </div>
+          <button type="submit">Submit</button>
+        </fieldset>
       {% endif %}
     {% endfor %}
-    <ul>
     {% for field, errors in form.errors.items() %}
-        <li>{{ form[field].label }}: {{ ', '.join(errors) }}</li>
+      <div role="alert" data-variant="error">{{ form[field].label }}: {{ ', '.join(errors) }}</div>
     {% endfor %}
-    </ul>
   </form>
+  <p>
+    You can automate this process using <strong>curl</strong>.
+  </p>
+  <pre><code>curl -q -X POST https://monero.fail/add -d node_url="${NODE_URL}"</code></pre>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="spacer">
       {% for category, message in messages %}
-        <p class="alert alert-{{ 'warning' if category == 'message' else category }}">{{ message }}</p>
+        <div role="alert" data-variant="{{ 'warning' if category == 'message' else category }}" style="margin-top: 0.5rem;">{{ message }}</div>
       {% endfor %}
-    </div>
     {% endif %}
   {% endwith %}
-</div>
-<div id="findnodes" class="box">
-  <h2>Nodes</h2>
-  <div id="filters">
-    <form>
-      <div class="row">
-        <span>
-          <label for="chainSelect">Chain:</label>
-          <select name="chain" id="chainSelect">
-            <option value="monero" {% if request.args.get('chain') == 'monero' %}selected{% endif %}>Monero</option>
-            <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
-          </select>
-        </span>
-        <span>
-          <label for="networkSelect">Network:</label>
-          <select name="network" id="networkSelect">
-            <option value="mainnet" {% if request.args.get('network') == 'mainnet' %}selected{% endif %}>Mainnet</option>
-            <option value="testnet" {% if request.args.get('network') == 'testnet' %}selected{% endif %}>Testnet</option>
-            <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
-          </select>
-        </span>
-        <span>
-          <label for="networkSelect">Node Type:</label>
-          <select name="type" id="typeSelect">
-            <option value="clear" {% if request.args.get('type') == 'clear' %}selected{% endif %}>Clear + CORS</option>
-            <option value="cors" {% if request.args.get('type') == 'cors' %}selected{% endif %}>CORS</option>
-            <option value="onion" {% if request.args.get('type') == 'onion' %}selected{% endif %}>Onion</option>
-            <option value="i2p" {% if request.args.get('type') == 'i2p' %}selected{% endif %}>I2P</option>
-            <option value="ipv6" {% if request.args.get('type') == 'ipv6' %}selected{% endif %}>IPv6</option>
-          </select>
-        </span>
-      </div>
-      <div class="row">
-        <span>
-          <input type="submit" value="Filter" class="button alert alert-info">
-        </span>
-        <span>
-          <a href="/#findnodes" class="button alert alert-warning">Reset</a>
-        </span>
-      </div>
-    </form>
-  </div>
+</article>
+
+<article class="card" id="nodes">
+  <header>
+    <h3>Nodes</h3>
+    <p>
+      <strong>To find healthy nodes near you, go to <a href="/find">Find Nodes</a>. Requires JavaScript.</strong>
+    </p>
+    <hr>
+  </header>
+
+  <form style="margin-bottom: 1rem;">
+    <div class="hstack" style="flex-wrap: wrap; gap: 1rem;">
+      <label data-field>
+        Chain
+        <select name="chain">
+          <option value="monero" {% if request.args.get('chain') == 'monero' %}selected{% endif %}>Monero</option>
+          <option value="wownero" {% if request.args.get('chain') == 'wownero' %}selected{% endif %}>Wownero</option>
+        </select>
+      </label>
+      <label data-field>
+        Network
+        <select name="network">
+          <option value="mainnet" {% if request.args.get('network') == 'mainnet' %}selected{% endif %}>Mainnet</option>
+          <option value="testnet" {% if request.args.get('network') == 'testnet' %}selected{% endif %}>Testnet</option>
+          <option value="stagenet" {% if request.args.get('network') == 'stagenet' %}selected{% endif %}>Stagenet</option>
+        </select>
+      </label>
+      <label data-field>
+        Node Type
+        <select name="type">
+          <option value="clear" {% if request.args.get('type') == 'clear' %}selected{% endif %}>Clear + CORS</option>
+          <option value="cors" {% if request.args.get('type') == 'cors' %}selected{% endif %}>CORS</option>
+          <option value="onion" {% if request.args.get('type') == 'onion' %}selected{% endif %}>Onion</option>
+          <option value="i2p" {% if request.args.get('type') == 'i2p' %}selected{% endif %}>I2P</option>
+          <option value="ipv6" {% if request.args.get('type') == 'ipv6' %}selected{% endif %}>IPv6</option>
+        </select>
+      </label>
+    </div>
+    <div class="hstack" style="gap: 0.5rem; margin-top: 0.75rem;">
+      <button type="submit">Filter</button>
+      <a href="/#nodes" class="button outline">Reset</a>
+    </div>
+  </form>
+
   {% if nodes %}
-  <div class="xmrnodes">
-    {% if web_compatible %}
     <p>
-      <strong>
-        Web compatible means the node is run in such a way that it allows web clients to access their APIs (CORS headers allow all and secure HTTP / TLS terminated). The more nodes there are running with these settings the more robust web clients will be in the future.
-      </strong>
-    </p>
-    {% endif %}
-    <div class="spacer"></div>
-    <p>
-      There are <span class="highlight h-mag">{{ total_nodes }}</span> {{ nettype }} {{ crypto | capitalize }} nodes in the database but <span class="highlight h-cya">{{ nodes_all }}</span> nodes stored with the current filters.
+      There are <span class="badge outline" style="font-size: 1em">{{ total_nodes }}</span> {{ nettype }} {{ crypto | capitalize }} nodes in the database but <span class="badge outline" style="font-size: 1em;">{{ nodes_all }}</span> nodes stored with the current filters.
     </p>
     <p>
-      Of those, {{ nodes_unhealthy }} nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
+      Of those, <span class="badge outline" style="font-size: 1em;">{{ nodes_unhealthy }}</span> nodes failed their last check-in (unresponsive to ping or over {{ config.HEALTHY_BLOCK_DIFF }} blocks away from highest reported block).
     </p>
     <h2>
       To find nodes located closest to you, go to <a href="/find">Find Nodes</a>.
     </h2>
     <p>
-      Showing healthy nodes {{ start_index}}-{{ end_index }} of {{ nodes_healthy }} total.
+      Showing healthy nodes {{ start_index }}-{{ end_index }} of {{ nodes_healthy }} total.
     </p>
+
     {% if total_pages > 1 %}
-    <div class="pagination">
-      {% if page > 1 %}
-      <a class="button" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ previous_page }}#findnodes">Previous</a>
-      {% endif %}
-      {% if page < total_pages %}
-      <a class="button" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ next_page }}#findnodes">Next</a>
-      {% endif %}
-    </div>
+    <nav aria-label="Pagination" style="margin: 1rem 0;">
+      <menu class="buttons">
+        {% if page > 1 %}
+        <li><a class="button outline small" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ previous_page }}#nodes">&larr; Previous</a></li>
+        {% endif %}
+        {% if page < total_pages %}
+        <li><a class="button outline small" href="{{ request.path }}?{% for key, value in request.args.items(False) if key != 'page' %}{{ key }}={{ value }}&{% endfor %}page={{ next_page }}#nodes">Next &rarr;</a></li>
+        {% endif %}
+      </menu>
+    </nav>
     {% endif %}
-    <br>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>URL</th>
-          <th>CORS</th>
-          <th>Last Height</th>
-          <th>History</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for node in nodes %}
-        <tr>
-          <td>
-            {% if node.is_tor %}
-            <img src="/static/images/tor.svg" height="20px">
-            {% elif node.is_i2p %}
-            <img src="/static/images/i2p.svg" height="20px">
-            {% else %}
-            <img src="/static/images/clearnet.svg" height="20px">
-            {% endif %}
-          </td>
-          <td id="nodeURL">
-            <span class="address">{{ node.url }}</span>
-            <a href="{{ node.url }}/get_info" target="_blank">
-              <img src="/static/images/open-link.svg" height="15px">
-            </a>
-            {% if node.donation_address | seems_legit %}
-              <span class="donationAddress address">{{ node.donation_address }}</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if node.web_compatible %}
-            <img src="/static/images/success.svg" class="filter-green" width=16px>
-            {% else %}
-            <img src="/static/images/error.svg" class="filter-red" width=16px>
-            {% endif %}
-          </td>
-          <td>{{ node.last_height }}</td>
-          <td>{% for hc in node.healthchecks %}
-            {% if loop.index > loop.length - 6 %}
-            <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
-            {% endif %}
-          {% endfor %}
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
+
+    <div class="table" id="table">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>URL</th>
+            <th>CORS</th>
+            <th>IPv6</th>
+            <th>Last Height</th>
+            <th>History</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for node in nodes %}
+          <tr>
+            <td>
+              {% if node.is_tor %}
+              <img src="/static/images/tor.svg" height="20px" alt="Tor">
+              {% elif node.is_i2p %}
+              <img src="/static/images/i2p.svg" height="20px" alt="I2P">
+              {% else %}
+              <img src="/static/images/clearnet.svg" height="20px" alt="Clearnet">
+              {% endif %}
+            </td>
+            <td>
+              <span class="address">{{ node.url }}</span>
+              <a href="{{ node.url }}/get_info" target="_blank">
+                <img src="/static/images/open-link.svg" height="14px" alt="Open">
+              </a>
+              <br />
+              <p style="font-size: 0.8em; color: rgba(34, 34, 34, 0.9);">
+                {% if node.state %}<a href="{{ request.path }}?{{ request.args | urlencode }}&city={{ node.city }}#nodes">{{ node.city }}</a>, {% endif %}
+                {% if node.country_name %}<a href="{{ request.path }}?{{ request.args | urlencode }}&country={{ node.country_code }}#nodes">{{ node.country_name }}</a>{% endif %}
+              </p>
+            </td>
+            <td>
+              {% if node.web_compatible %}
+              <img src="/static/images/success.svg" class="filter-green" width="16px" alt="Yes">
+              {% else %}
+              <img src="/static/images/error.svg" class="filter-red" width="16px" alt="No">
+              {% endif %}
+            </td>
+            <td>
+              {% if node.is_ipv6 %}
+              <img src="/static/images/success.svg" class="filter-green" width="16px" alt="Yes">
+              {% else %}
+              <img src="/static/images/error.svg" class="filter-red" width="16px" alt="No">
+              {% endif %}
+            </td>
+            <td>{{ node.last_height }}</td>
+            <td>{% for hc in node.healthchecks %}
+              {% if loop.index > loop.length - 6 %}
+              <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
+              {% endif %}
+            {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p class="center">No nodes in the database yet...</p>
+    <p style="text-align: center;">No nodes in the database yet...</p>
   {% endif %}
-</div>
+</article>
 
 {% endblock %}

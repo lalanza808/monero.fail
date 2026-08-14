@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import geoip2.database
 import arrow
 import requests
-from peewee import BooleanField
+from peewee import BooleanField, CharField
 from flask import Blueprint
 from jinja2 import Environment, FileSystemLoader
 from urllib.parse import urlparse
@@ -20,20 +20,32 @@ from xmrnodes import config
 bp = Blueprint("cli", "cli", cli_group=None)
 
 
-@bp.cli.command("init")
-def init():
+@bp.cli.command("migrate")
+def migrate():
     from playhouse.migrate import SqliteMigrator, migrate
     from xmrnodes.models import db
     migrator = SqliteMigrator(db)
-    # Add is_ipv6 column if it doesn't exist
-    columns = [col.name for col in db.get_columns("node")]
-    if "is_ipv6" not in columns:
-        migrate(
-            migrator.add_column("node", "is_ipv6", BooleanField(default=False)),
-        )
-        logging.info("Added is_ipv6 column to node table")
-    else:
-        logging.info("Migration already applied")
+    # Add state column if it doesn't exist
+    for table in ["node", "peer"]:
+        columns = [col.name for col in db.get_columns(table)]
+        if "state" not in columns:
+            migrate(
+                migrator.add_column(table, "state", CharField(null=True)),
+            )
+            logging.info(f"Added state column to {table} table")
+        else:
+            logging.info("Migration already applied")
+    
+    for node in Node.select().where(Node.is_tor == False, Node.is_i2p == False):
+        try:
+            geodata = get_geoip(node.url)
+            if geodata.subdivisions.most_specific.name:
+                node.state = geodata.subdivisions.most_specific.name
+                node.save()
+                print(f"Updated GeoIP {node.url}")
+        except Exception as e:
+            print(f"Failed to update {node.url}: {e}")
+
 
 @bp.cli.command("html")
 def html():
@@ -130,22 +142,20 @@ def upsert_peer(peer):
         exists.datetime = datetime.utcnow()
         exists.save()
     else:
-        with geoip2.database.Reader("./data/GeoLite2-City.mmdb") as geodb:
-            try:
-                u = urlparse(peer)
-                _url = f"{u.scheme}://{u.netloc}".lower()
-                geodata = geodb.city(u.hostname)
-                p = Peer(
-                    url=_url,
-                    country=geodata.country.name,
-                    city=geodata.city.name,
-                    postal=geodata.postal.code,
-                    lat=geodata.location.latitude,
-                    lon=geodata.location.longitude,
-                )
-                p.save()
-            except Exception as e:
-                pass
+        try:
+            geodata = get_geoip(url)
+            p = Peer(
+                url=_url,
+                country=geodata.country.name,
+                city=geodata.city.name,
+                state=geodata.subdivisions.most_specific.name,
+                postal=geodata.postal.code,
+                lat=geodata.location.latitude,
+                lon=geodata.location.longitude,
+            )
+            p.save()
+        except Exception as e:
+            pass
 
 def _get_peers():
     """
@@ -179,6 +189,9 @@ def _get_peers():
     if not peers:
         print(f"[.] Retrieving peers from {config.NODE_HOST}:{config.NODE_PORT}")
         peers_to_scan = retrieve_peers(config.NODE_HOST, config.NODE_PORT)
+        if not peers_to_scan:
+            print("Could not find any peers. Sum ting wong.")
+            return False
         print(f"[+] Found {len(peers_to_scan)} initial peers to begin scraping.")
         for peer in peers_to_scan:
             upsert_peer(peer)
@@ -232,6 +245,7 @@ def validate_node(node):
                 node.country_name = geoip.country.name
                 node.country_code = geoip.country.iso_code
                 node.city = geoip.city.name
+                node.state = geoip.subdivisions.most_specific.name
                 node.postal = geoip.postal.code
                 node.lat = geoip.location.latitude
                 node.lon = geoip.location.longitude
