@@ -73,6 +73,14 @@
           <option value="ipv6" {% if request.args.get('type') == 'ipv6' %}selected{% endif %}>IPv6</option>
         </select>
       </label>
+      <label data-field>
+        Country
+        <select name="country">
+          {% for country in countries %}
+            <option value="{{ country[0] }}">{{ country[1] }}</option>
+          {% endfor %}
+        </select>
+      </label>
     </div>
     <div class="hstack" style="gap: 0.5rem; margin-top: 0.75rem;">
       <button type="submit">Filter</button>

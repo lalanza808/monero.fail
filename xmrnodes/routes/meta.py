@@ -80,6 +80,9 @@ def index():
         Node.last_height > healthy_block
     ).order_by(Node.datetime_entered.desc())
 
+    country_codes = [(n.country_code, n.country_name) for n in nodes if n.country_code]
+    country_codes = sorted(set(country_codes))
+
 
     nodes_healthy = nodes.count()
 
@@ -128,6 +131,7 @@ def index():
         previous_page=previous_page,
         start_index=start_index,
         end_index=end_index,
+        countries=country_codes
     )
 
 
