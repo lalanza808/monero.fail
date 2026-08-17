@@ -1,6 +1,8 @@
 import sys
+import json
 import socket
 import pickle
+import logging
 from os import path
 from math import radians, cos, sin, asin, sqrt
 
@@ -197,3 +199,31 @@ def haversine(lat1, lon1, lat2, lon2):
     dlon = lon2 - lon1
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     return 6371 * 2 * asin(sqrt(a))
+
+
+def refresh_country_cache():
+    """Query distinct country codes from validated nodes and write to JSON cache file."""
+    cache_path = path.join(config.DATA_DIR, "country_cache.json")
+    countries = (
+        Node.select(Node.country_code, Node.country_name)
+        .where(Node.validated == True, Node.country_code.is_null(False))
+        .distinct()
+    )
+    country_list = sorted(
+        set((n.country_code, n.country_name) for n in countries),
+        key=lambda x: x[1] or ""
+    )
+    with open(cache_path, "w") as f:
+        json.dump(country_list, f)
+    logging.info(f"Refreshed country cache ({len(country_list)} countries)")
+
+
+def get_cached_countries():
+    """Read country list from cache file. Returns list of (code, name) tuples or None on failure."""
+    cache_path = path.join(config.DATA_DIR, "country_cache.json")
+    try:
+        with open(cache_path, "r") as f:
+            data = json.load(f)
+        return [tuple(item) for item in data]
+    except (FileNotFoundError, json.JSONDecodeError, ValueError):
+        return None

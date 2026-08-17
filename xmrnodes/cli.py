@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from xmrnodes.helpers import determine_crypto, is_onion, is_i2p, has_ipv6, make_request
 from xmrnodes.helpers import retrieve_peers, get_highest_block, get_geoip, get_nodes
+from xmrnodes.helpers import refresh_country_cache
 from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
@@ -106,6 +107,7 @@ def check_nodes():
                 exit()
             except Exception as e:
                 logging.error(f"Error checking {futures[future].url}: {e}")
+    refresh_country_cache()
 
 def check_node(_node):
     if _node.startswith("http"):
@@ -250,6 +252,7 @@ def validate():
                 exit()
             except Exception as e:
                 logging.error(f"{futures[future].url} - unexpected error: {e}")
+    refresh_country_cache()
 
 def validate_node(node):
     url = node.url

@@ -8,7 +8,7 @@ from flask import request, redirect, Blueprint
 from flask import render_template, flash, Response, jsonify
 from urllib.parse import urlparse
 
-from xmrnodes.helpers import get_highest_block, haversine
+from xmrnodes.helpers import get_highest_block, haversine, get_cached_countries
 from xmrnodes.forms import SubmitNode
 from xmrnodes.models import Node, Peer
 from xmrnodes import config
@@ -46,8 +46,11 @@ def index():
 
     total_nodes = nodes.count()
 
-    country_codes = [(n.country_code, n.country_name) for n in nodes if n.country_code]
-    country_codes = sorted(set(country_codes))
+    # Use cached country list; fall back to DB query if cache is unavailable
+    country_codes = get_cached_countries()
+    if country_codes is None:
+        country_codes = [(n.country_code, n.country_name) for n in nodes if n.country_code]
+        country_codes = sorted(set(country_codes))
 
     if city:
         nodes = nodes.where(Node.city == city)
