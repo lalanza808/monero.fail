@@ -52,11 +52,13 @@
     </details>
     {% endblock %}
 
+    {% block donate %}
     <details style="margin-top: 8px;">
       <summary style="background-color: rgba(62, 255, 191, 0.5);">Donate</summary>
       <p class="p-2">Please consider donating to fund hosting bills, development, and ongoing maintenance.</p>
       <p class="address" class="p-2"><strong>{{ config.DONATE_ADDRESS }}</strong></p>
     </details>
+    {% endblock %}
 
     <main>
       {% block content %}{% endblock %}
