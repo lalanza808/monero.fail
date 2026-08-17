@@ -76,6 +76,7 @@
       <label data-field>
         Country
         <select name="country">
+            <option value="" selected>all</option>
           {% for country in countries %}
             <option value="{{ country[0] }}">{{ country[1] }}</option>
           {% endfor %}

@@ -46,6 +46,9 @@ def index():
 
     total_nodes = nodes.count()
 
+    country_codes = [(n.country_code, n.country_name) for n in nodes if n.country_code]
+    country_codes = sorted(set(country_codes))
+
     if city:
         nodes = nodes.where(Node.city == city)
     elif state:
@@ -79,9 +82,6 @@ def index():
         Node.available == True,
         Node.last_height > healthy_block
     ).order_by(Node.datetime_entered.desc())
-
-    country_codes = [(n.country_code, n.country_name) for n in nodes if n.country_code]
-    country_codes = sorted(set(country_codes))
 
 
     nodes_healthy = nodes.count()
