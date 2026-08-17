@@ -2,7 +2,7 @@ from flask import jsonify, Blueprint
 from flask_restx import Api, Resource, Namespace, fields, reqparse
 
 from xmrnodes.helpers import get_highest_block, haversine
-from xmrnodes.models import Node, HealthCheck
+from xmrnodes.models import Node, HealthCheck, Peer
 from xmrnodes import config
 
 
@@ -109,6 +109,9 @@ ns_nodes = api.namespace(
 ns_health = api.namespace(
     "health", description="Node health check data"
 )
+ns_peers = api.namespace(
+    "peers", description="Discovered P2P peer information"
+)
 
 # --- Response models ---
 node_model = api.model("Node", {
@@ -176,6 +179,28 @@ nearby_node_model = api.model("NearbyNode", {
 nearby_response = api.model("NearbyResponse", {
     "total": fields.Integer(description="Total matching nodes"),
     "nodes": fields.List(fields.Nested(nearby_node_model)),
+})
+
+peer_model = api.model("Peer", {
+    "url": fields.String(description="Peer URL (scheme://host:port)"),
+    "hostname": fields.String(description="Peer hostname/IP"),
+    "port": fields.Integer(description="Peer port number"),
+    "country": fields.String(description="Country where peer is located"),
+    "country_code": fields.String(description="ISO country code"),
+    "city": fields.String(description="City where peer is located"),
+    "state": fields.String(description="State/region where peer is located"),
+    "postal": fields.String(description="Postal code"),
+    "lat": fields.Float(description="Latitude"),
+    "lon": fields.Float(description="Longitude"),
+    "datetime": fields.DateTime(description="When the peer was discovered"),
+})
+
+peers_response = api.model("PeersResponse", {
+    "total": fields.Integer(description="Total number of matching peers"),
+    "page": fields.Integer(description="Current page number"),
+    "per_page": fields.Integer(description="Results per page"),
+    "pages": fields.Integer(description="Total number of pages"),
+    "peers": fields.List(fields.Nested(peer_model)),
 })
 
 # --- Request parsers ---
@@ -279,6 +304,23 @@ nearby_parser.add_argument(
     location="args"
 )
 
+peers_parser = reqparse.RequestParser()
+peers_parser.add_argument(
+    "country", type=str, default=None,
+    help="Filter by ISO country code (e.g. US, DE, FR)",
+    location="args"
+)
+peers_parser.add_argument(
+    "page", type=int, default=1,
+    help="Page number (1-indexed)",
+    location="args"
+)
+peers_parser.add_argument(
+    "per_page", type=int, default=50,
+    help="Results per page (max 100)",
+    location="args"
+)
+
 
 # --- Helper functions ---
 def serialize_node(node):
@@ -302,6 +344,23 @@ def serialize_node(node):
         "datetime_checked": node.datetime_checked.isoformat() if node.datetime_checked else None,
         "datetime_failed": node.datetime_failed.isoformat() if node.datetime_failed else None,
         "fail_reason": node.fail_reason,
+    }
+
+
+def serialize_peer(peer):
+    """Convert a Peer model instance to a dictionary."""
+    return {
+        "url": peer.url,
+        "hostname": peer.hostname,
+        "port": peer.port,
+        "country": peer.country,
+        "country_code": peer.country_code,
+        "city": peer.city,
+        "state": peer.state,
+        "postal": str(peer.postal) if peer.postal is not None else None,
+        "lat": peer.lat,
+        "lon": peer.lon,
+        "datetime": peer.datetime.isoformat() if peer.datetime else None,
     }
 
 
@@ -516,3 +575,57 @@ class NearbyNodes(Resource):
 
         results.sort(key=lambda x: x["distance_km"])
         return {"nodes": results[:limit], "total": len(results)}
+
+
+@ns_peers.route("/")
+class PeerList(Resource):
+    @ns_peers.doc("list_peers")
+    @ns_peers.expect(peers_parser)
+    @ns_peers.marshal_with(peers_response)
+    def get(self):
+        """List discovered P2P peers.
+
+        Returns a paginated list of peers discovered via the Levin P2P protocol.
+        Optionally filter by country.
+        """
+        args = peers_parser.parse_args()
+        country = args["country"]
+        page = max(1, args["page"])
+        per_page = min(100, max(1, args["per_page"]))
+
+        query = Peer.select()
+
+        if country:
+            query = query.where(Peer.country_code == country.upper())
+
+        query = query.order_by(Peer.datetime.desc())
+        total = query.count()
+        pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, pages)
+        offset = (page - 1) * per_page
+        peers = query.offset(offset).limit(per_page)
+
+        return {
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": pages,
+            "peers": [serialize_peer(p) for p in peers],
+        }
+
+
+@ns_peers.route("/<string:peer_url>")
+@ns_peers.param("peer_url", "The peer URL (URL-encoded, e.g. http%3A%2F%2Fhost%3Aport)")
+class PeerDetail(Resource):
+    @ns_peers.doc("get_peer")
+    @ns_peers.marshal_with(peer_model)
+    @ns_peers.response(404, "Peer not found")
+    def get(self, peer_url):
+        """Get details for a specific peer by URL."""
+        from urllib.parse import unquote
+        decoded_url = unquote(peer_url)
+        try:
+            peer = Peer.get(Peer.url == decoded_url)
+        except Peer.DoesNotExist:
+            api.abort(404, f"Peer not found: {decoded_url}")
+        return serialize_peer(peer)

@@ -57,6 +57,7 @@ class Peer(Model):
     id = AutoField()
     url = CharField(unique=True)
     country = CharField(null=True)
+    country_code = CharField(null=True)
     city = CharField(null=True)
     state = CharField(null=True)
     postal = IntegerField(null=True)

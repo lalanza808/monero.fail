@@ -60,25 +60,26 @@ def migrate():
     from playhouse.migrate import SqliteMigrator, migrate
     from xmrnodes.models import db
     migrator = SqliteMigrator(db)
-    # for table in ["node", "peer"]:
-    #     columns = [col.name for col in db.get_columns(table)]
-    #     if "state" not in columns:
-    #         migrate(
-    #             migrator.add_column(table, "state", CharField(null=True)),
-    #         )
-    #         logging.info(f"Added state column to {table} table")
-    #     else:
-    #         logging.info("Migration already applied")
-    
-    # for node in Node.select().where(Node.is_tor == False, Node.is_i2p == False):
-    #     try:
-    #         geodata = get_geoip(node.url)
-    #         if geodata.subdivisions.most_specific.name:
-    #             node.state = geodata.subdivisions.most_specific.name
-    #             node.save()
-    #             print(f"Updated GeoIP {node.url}")
-    #     except Exception as e:
-    #         print(f"Failed to update {node.url}: {e}")
+
+    columns = [col.name for col in db.get_columns("peer")]
+    if "country_code" not in columns:
+        migrate(
+            migrator.add_column("peer", "country_code", CharField(null=True)),
+        )
+        logging.info("Added country_code column to peer table")
+    else:
+        logging.info("country_code column already exists in peer table")
+
+    # Backfill country_code for existing peers using GeoIP
+    peers = Peer.select().where(Peer.country_code.is_null())
+    for peer in peers:
+        try:
+            geodata = get_geoip(peer.url)
+            peer.country_code = geodata.country.iso_code
+            peer.save()
+            print(f"Updated country_code for {peer.url}: {peer.country_code}")
+        except Exception as e:
+            print(f"Failed to update {peer.url}: {e}")
 
 
 @bp.cli.command("html")
@@ -182,6 +183,7 @@ def upsert_peer(peer):
             p = Peer(
                 url=_url,
                 country=geodata.country.name,
+                country_code=geodata.country.iso_code,
                 city=geodata.city.name,
                 state=geodata.subdivisions.most_specific.name,
                 postal=geodata.postal.code,
