@@ -93,6 +93,7 @@ def index():
     total_pages = (nodes_healthy // per_page) + 1
 
     # Ensure page is within valid range
+    seed(nodes.count())
     page = request.args.get("page", "1")
     if not page.isdigit():
         return redirect("/")
@@ -104,7 +105,6 @@ def index():
     end_index = start_index + per_page
     if nodes_healthy < per_page:
         end_index = nodes_healthy
-    seed(page)
     nodes_list = list(nodes)
     shuffle(nodes_list)
     paginated_nodes = nodes_list[start_index:end_index]
