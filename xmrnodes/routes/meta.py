@@ -1,4 +1,5 @@
 import re
+from time import time
 from random import shuffle, seed
 from math import ceil
 from datetime import timedelta
@@ -90,10 +91,9 @@ def index():
     nodes_healthy = nodes.count()
 
     # Pagination
-    total_pages = (nodes_healthy // per_page) + 1
+    total_pages = max(1, -(-nodes_healthy // per_page))
 
     # Ensure page is within valid range
-    seed(nodes.count())
     page = request.args.get("page", "1")
     if not page.isdigit():
         return redirect("/")
@@ -105,6 +105,9 @@ def index():
     end_index = start_index + per_page
     if nodes_healthy < per_page:
         end_index = nodes_healthy
+
+    # Shuffle
+    seed(int(time()) // 3600)
     nodes_list = list(nodes)
     shuffle(nodes_list)
     paginated_nodes = nodes_list[start_index:end_index]
