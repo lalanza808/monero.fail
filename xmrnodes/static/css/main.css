@@ -1,7 +1,7 @@
 /* App-specific styles for monero.fail */
 
 .container {
-    max-width: 960px;
+    max-width: 1100px;
     margin-inline: auto;
     padding-inline: 1rem;
 }
@@ -25,8 +25,7 @@
     word-break: break-all;
     font-family: monospace;
     font-size: 0.85em;
-    min-width: 200px;
-    display: inline-block;
+    min-width: 140px;
 }
 
 .donationAddress {
@@ -74,4 +73,8 @@
     height: 600px;
     margin: 1rem 0;
     padding: 0;
+}
+
+.inline {
+    display: inline;
 }
