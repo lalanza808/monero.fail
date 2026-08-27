@@ -1,10 +1,32 @@
 /* App-specific styles for monero.fail */
 
+.container {
+    max-width: 960px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+}
+
+.card:has(.table) {
+    overflow: hidden;
+}
+
+.table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+.table table {
+    min-width: 700px;
+}
+
 .address {
     user-select: all;
-    word-wrap: anywhere;
+    word-break: break-all;
     font-family: monospace;
     font-size: 0.85em;
+    min-width: 200px;
+    display: inline-block;
 }
 
 .donationAddress {
