@@ -75,6 +75,14 @@
     padding: 0;
 }
 
+/* Override oat.min.css "canvas { max-width: 100% }" reset which breaks
+   OpenLayers' internal canvas sizing and causes map features (dots) to
+   render at wrong positions on narrow / mobile viewports. */
+#map canvas,
+.ol-viewport canvas {
+    max-width: none;
+}
+
 .inline {
     display: inline;
 }
