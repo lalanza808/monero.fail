@@ -17,56 +17,97 @@
     New peers are searched every hour and unresponsive nodes are removed.
   </p>
   <p>
-    The map is currently showing {{ shown_peers }} peers seen in the past 72 hours.
+    Showing <span id="shownPeers">0</span> peers in the current view.
+    Zoom in or pan to load more.
   </p>
   <p><span id="selectedNode" class="badge">Click a node below to see connection details.</span></p>
 </article>
 
 <div id="loadingContainer" style="text-align: center; margin: 2rem 0;">
-  <h3>Loading map... <span id="loadProgress"></span></h3>
+  <h3>Loading map...</h3>
   <img id="loading" src="/static/images/helping.gif" style="width: 30%; max-width: 300px;" />
 </div>
 
 <div id="map" style="height: 600px; border: 1px solid var(--border); border-radius: 4px;"></div>
 
 <script>
-  async function fetchWithDelay(total, delayMs) {
-    for(let i=0; i < total + 1; i++) {
-      document.getElementById('loadProgress').innerHTML = `%${Math.round(i / total * 100, 2)}`;
-      try {
-        await fetch(`?fetch=1&offset=${i}`)
-          .then((res) => res.json())
-          .then((d) => {
-            for (var url in d.peers) {
-              let peer = d.peers[url];
-              var feature = new ol.Feature(
-                new ol.geom.Point(ol.proj.transform([peer.lon, peer.lat], 'EPSG:4326', 'EPSG:3857'))
-              );
-              feature.description = [
-                `Node ${url}`,
-                `Last Seen ${peer.last_seen}`
-              ];
-              feature.setStyle(new ol.style.Style({
-                image: new ol.style.Circle({
-                  radius: 5,
-                  fill: new ol.style.Fill({
-                    color: peer.rgba,
-                  }),
-                  stroke: new ol.style.Stroke({
-                    color: '#000',
-                    width: 1
-                  })
-                })
-              }));
-              markerLayer.getSource().addFeature(feature);
-            }
+  let markerLayer;
+  let olMap;
+  let fetchTimer = null;
+  let knownUrls = new Set();
+
+  function getViewportBbox() {
+    const view = olMap.getView();
+    const extent = view.calculateExtent(olMap.getSize());
+    const bottomLeft = ol.proj.transform([extent[0], extent[1]], 'EPSG:3857', 'EPSG:4326');
+    const topRight = ol.proj.transform([extent[2], extent[3]], 'EPSG:3857', 'EPSG:4326');
+    return {
+      min_lon: bottomLeft[0],
+      min_lat: bottomLeft[1],
+      max_lon: topRight[0],
+      max_lat: topRight[1]
+    };
+  }
+
+  async function fetchPeersForViewport() {
+    const bbox = getViewportBbox();
+    const params = new URLSearchParams({
+      fetch: '1',
+      min_lat: bbox.min_lat,
+      max_lat: bbox.max_lat,
+      min_lon: bbox.min_lon,
+      max_lon: bbox.max_lon
+    });
+
+    try {
+      const res = await fetch(`?${params}`);
+      const data = await res.json();
+
+      // Clear existing features and known URLs for fresh viewport data
+      markerLayer.getSource().clear();
+      knownUrls.clear();
+
+      for (const url in data.peers) {
+        if (knownUrls.has(url)) continue;
+        knownUrls.add(url);
+
+        const peer = data.peers[url];
+        const feature = new ol.Feature(
+          new ol.geom.Point(ol.proj.transform([peer.lon, peer.lat], 'EPSG:4326', 'EPSG:3857'))
+        );
+        feature.description = [
+          `Node ${url}`,
+          `Last Seen ${peer.last_seen}`
+        ];
+        feature.setStyle(new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 5,
+            fill: new ol.style.Fill({
+              color: peer.rgba,
+            }),
+            stroke: new ol.style.Stroke({
+              color: '#000',
+              width: 1
+            })
           })
-      } catch (err) {
-        console.error(`Error on request ${i}`);
+        }));
+        markerLayer.getSource().addFeature(feature);
       }
+
+      document.getElementById('shownPeers').textContent = knownUrls.size;
+
+      // Hide loading indicator after first load
+      const loadingEl = document.getElementById('loadingContainer');
+      if (loadingEl) loadingEl.remove();
+      document.getElementById('map').style['opacity'] = 1;
+    } catch (err) {
+      console.error('Error fetching peers:', err);
     }
-    document.getElementById('loadingContainer').remove();
-    document.getElementById('map').style['opacity'] = 1;
+  }
+
+  function debouncedFetch() {
+    if (fetchTimer) clearTimeout(fetchTimer);
+    fetchTimer = setTimeout(fetchPeersForViewport, 300);
   }
 
   async function loadMap() {
@@ -77,7 +118,7 @@
       })
     });
 
-    var map = new ol.Map({
+    olMap = new ol.Map({
       target: 'map',
       layers: [
         new ol.layer.Tile({
@@ -87,26 +128,27 @@
         markerLayer
       ],
       view: new ol.View({
-        center: ol.proj.fromLonLat([0, 25]),
+        center: ol.proj.fromLonLat([-30, 25]),
         minZoom: 3,
         zoom: 3,
-        maxZoom: 10
+        maxZoom: 12
       })
     });
 
-    const res = await fetch('?fetch=1')
-      .then((res) => res.json());
+    // Fetch peers for initial viewport
+    await fetchPeersForViewport();
 
-    fetchWithDelay(res.total, 300);
+    // Re-fetch when the user pans or zooms
+    olMap.on('moveend', debouncedFetch);
 
     var popup = new ol.Overlay({
       element: $('#popup')[0],
     });
-    map.addOverlay(popup);
+    olMap.addOverlay(popup);
 
-    map.on("click", function(e) {
+    olMap.on("click", function(e) {
       var element = popup.getElement();
-      map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
+      olMap.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
         var coordinate = e.coordinate;
         let sel = $('#selectedNode');
         sel.html(`${feature.description[0]} ${feature.description[1]}`);

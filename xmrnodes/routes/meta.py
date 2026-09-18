@@ -1,7 +1,6 @@
 import re
 from time import time
 from random import shuffle, seed
-from math import ceil
 from datetime import timedelta
 
 import arrow
@@ -145,21 +144,35 @@ def index():
 def map():
     fetch = request.args.get("fetch")
     now = arrow.utcnow()
-    all_peers = Peer.select()
-    peers = all_peers.order_by(Peer.datetime.desc()).limit(5000)
+    all_peers = Peer.select().where(
+        Peer.lat.is_null(False),
+        Peer.lon.is_null(False),
+    )
     if fetch:
         _peers = {}
-        next = None
-        limit = 1000
         rgb = "238,111,45"
-        offset = request.args.get("offset", 0)
-        offset = int(offset)
-        
-        paginated_peers = peers.paginate(offset, limit)
-        total = ceil(peers.count() / limit)
-        if offset < total:
-            next = offset + 1
-        for peer in paginated_peers:
+        limit = 5000
+
+        peers = all_peers
+
+        # Filter by bounding box when provided (viewport-based loading)
+        try:
+            min_lat = float(request.args.get("min_lat"))
+            max_lat = float(request.args.get("max_lat"))
+            min_lon = float(request.args.get("min_lon"))
+            max_lon = float(request.args.get("max_lon"))
+            peers = peers.where(
+                Peer.lat >= min_lat,
+                Peer.lat <= max_lat,
+                Peer.lon >= min_lon,
+                Peer.lon <= max_lon,
+            )
+        except (TypeError, ValueError):
+            pass
+
+        peers = peers.order_by(Peer.datetime.desc()).limit(limit)
+
+        for peer in peers:
             opacity = ".8"
             _peers[peer.url] = {
                 "rgba": f"rgba({rgb},{opacity})",
@@ -168,16 +181,13 @@ def map():
                 "last_seen": arrow.get(peer.datetime).humanize(now, granularity="minute")
             }
         return {
-            "offset": offset,
-            "next": next,
-            "total": total,
+            "total": len(_peers),
             "peers": _peers
         }
     return render_template(
         "map.html",
         recent_peers=all_peers.count(),
         source_node=config.NODE_HOST,
-        shown_peers=peers.count()
     )
 
 
