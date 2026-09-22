@@ -29,6 +29,14 @@ def trim_arg(all_args, arg_to_trim):
     return urlencode(d)
 
 
+@bp.app_template_filter("set_arg")
+def set_arg(all_args, key, value):
+    """Return a query string with key set to value, replacing any existing occurrence."""
+    d = all_args.to_dict()
+    d[key] = value
+    return urlencode(d)
+
+
 @bp.app_template_filter("seems_legit")
 def seems_legit(addy):
     if type(addy) == str:
