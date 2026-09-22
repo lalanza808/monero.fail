@@ -10,31 +10,31 @@ dev:
 	FLASK_DEBUG=1 uv run flask run
 
 build:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml build
+	docker compose -f docker-compose.prod.yaml build
 
 prod:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+	docker compose -f docker-compose.prod.yaml up -d
 
 logs:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml logs -f
+	docker compose -f docker-compose.prod.yaml logs -f
 
 down:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml down
+	docker compose -f docker-compose.prod.yaml down
 
 validate:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask validate
+	docker compose -f docker-compose.prod.yaml exec web uv run flask validate
 
 check:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask check
+	docker compose -f docker-compose.prod.yaml exec web uv run flask check
 
 export:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask export
+	docker compose -f docker-compose.prod.yaml exec web uv run flask export
 
 peers:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask get_peers
+	docker compose -f docker-compose.prod.yaml exec web uv run flask get_peers
 
 html:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask html
+	docker compose -f docker-compose.prod.yaml exec web uv run flask html
 
 vacuum:
 	sqlite3 data/sqlite.db 'VACUUM;'

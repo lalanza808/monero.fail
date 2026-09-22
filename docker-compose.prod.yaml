@@ -5,6 +5,20 @@ x-log-config: &log-config
       max-size: "50m"
       max-file: "5"
 services:
+  tor:
+    container_name: fail-tor
+    build:
+      context: .
+      dockerfile: Dockerfile-tor
+    restart: unless-stopped
+    <<: *log-config
+  i2p:
+    container_name: fail-i2p
+    build:
+      context: .
+      dockerfile: Dockerfile-i2p
+    restart: unless-stopped
+    <<: *log-config
   web:
     container_name: fail-web
     build:
@@ -23,6 +37,9 @@ services:
       - SERVER_NAME=${SERVER_NAME:-localhost:5000}
     volumes:
       - ./data:/app/data
+    depends_on:
+      - tor
+      - i2p
     <<: *log-config
   web-onion:
     container_name: fail-web-onion
@@ -42,4 +59,7 @@ services:
       - SERVER_NAME=${ONION_ADDRESS:-localhost:5001}
     volumes:
       - ./data:/app/data
+    depends_on:
+      - tor
+      - i2p
     <<: *log-config
