@@ -1,18 +1,19 @@
+# Clone monero.fail to /opt/monero.fail
+
 # every 2 hours clean db
-0 */2 * * * /usr/bin/sqlite3 $HOME/monero.fail/data/sqlite.db 'VACUUM;'
-0 */2 * * * /usr/bin/sqlite3 $HOME/monero.fail/data/sqlite.db 'PRAGMA wal_checkpoint(truncate);'
+0 */2 * * * make -C /opt/monero.fail vacuum
 
 # every 10 minutes validate up to 50 pending nodes
-*/10 * * * * sh -c "cd ~/monero.fail; ./manage.sh validate 2>&1 | tee -a ~/validate.log"
+*/10 * * * * make -C /opt/monero.fail validate >> ~/validate.log 2>&1
 
 # every 10 minutes check up to 20 nodes
-*/10 * * * * sh -c "cd ~/monero.fail; ./manage.sh check 2>&1 | tee -a ~/check.log"
+*/10 * * * * make -C /opt/monero.fail check >> ~/check.log 2>&1
 
 # every day export nodes to list
-20 0 * * * sh -c "cd ~/monero.fail; ./manage.sh export"
+20 0 * * * make -C /opt/monero.fail export
 
 # every 30 minutes scrape p2p peers
-*/30 * * * * sh -c "cd ~/monero.fail; ./manage.sh get_peers 2>&1 | tee -a ~/peers.log"
+*/30 * * * * make -C /opt/monero.fail peers >> ~/peers.log 2>&1
 
 # every hour export offline list
-0 * * * * sh -c "cd ~/monero.fail; ./manage.sh html; cp data/offline.html /var/www/monero.fail/index.html"
+0 * * * * make -C /opt/monero.fail html; cp /opt/monero.fail/data/offline.html /var/www/monero.fail/index.html

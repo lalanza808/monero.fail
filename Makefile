@@ -4,16 +4,38 @@ setup:
 	wget https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb -P data --no-clobber
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
 dev:
-	./manage.sh run
+	FLASK_APP=xmrnodes/app.py FLASK_DEBUG=1 uv run flask run
+
+build:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml build
 
 prod:
-	./manage.sh prod
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
 
-logs:
-	docker-compose logs -f
+prod-down:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml down
 
-kill:
-	pkill -ef xmrnodes
+down:
+	docker compose down
+
+validate:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask validate
+
+check:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask check
+
+export:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask export
+
+peers:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask get_peers
+
+html:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask html
+
+vacuum:
+	sqlite3 data/sqlite.db 'VACUUM;'
+	sqlite3 data/sqlite.db 'PRAGMA wal_checkpoint(truncate);'
