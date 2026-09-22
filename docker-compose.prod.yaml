@@ -18,6 +18,7 @@ services:
     environment:
       - TOR_HOST=tor
       - TOR_PORT=9050
+      - SERVER_NAME=${SERVER_NAME:-localhost:5000}
       - FLASK_APP=xmrnodes/app.py
     volumes:
       - ./data:/app/data
