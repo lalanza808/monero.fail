@@ -13,6 +13,8 @@ services:
     restart: unless-stopped
     ports:
       - 127.0.0.1:9050:9050
+    expose:
+      - "9050"
     <<: *log-config
   i2p:
     container_name: fail-i2p
@@ -22,4 +24,6 @@ services:
     restart: unless-stopped
     ports:
         - 127.0.0.1:4444:4444
+    expose:
+      - "4444"
     <<: *log-config

@@ -1,4 +1,7 @@
-data
-.venv
-infodump
+__pycache__
+*.pyc
+.git
 .env
+data/
+.venv/
+*.egg-info/

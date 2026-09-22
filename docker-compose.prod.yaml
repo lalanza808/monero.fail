@@ -1,0 +1,42 @@
+x-log-config: &log-config
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "5"
+services:
+  web:
+    container_name: fail-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:5000:5000
+    env_file:
+      - .env
+    environment:
+      - TOR_HOST=tor
+      - TOR_PORT=9050
+      - FLASK_APP=xmrnodes/app.py
+    volumes:
+      - ./data:/app/data
+    <<: *log-config
+  web-onion:
+    container_name: fail-web-onion
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:5001:5000
+    env_file:
+      - .env
+    environment:
+      - TOR_HOST=tor
+      - TOR_PORT=9050
+      - FLASK_APP=xmrnodes/app.py
+      - SERVER_NAME=${ONION_ADDRESS:-localhost:5001}
+    volumes:
+      - ./data:/app/data
+    <<: *log-config
