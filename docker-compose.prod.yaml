@@ -18,6 +18,8 @@ services:
     environment:
       - TOR_HOST=tor
       - TOR_PORT=9050
+      - I2P_HOST=i2p
+      - I2P_PORT=4444
       - SERVER_NAME=${SERVER_NAME:-localhost:5000}
     volumes:
       - ./data:/app/data
@@ -35,6 +37,8 @@ services:
     environment:
       - TOR_HOST=tor
       - TOR_PORT=9050
+      - I2P_HOST=i2p
+      - I2P_PORT=4444
       - SERVER_NAME=${ONION_ADDRESS:-localhost:5001}
     volumes:
       - ./data:/app/data
