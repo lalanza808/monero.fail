@@ -7,7 +7,7 @@ up:
 	docker compose up -d
 
 dev:
-	FLASK_APP=xmrnodes/app.py FLASK_DEBUG=1 uv run flask run
+	FLASK_DEBUG=1 uv run flask run
 
 build:
 	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml build
@@ -15,11 +15,11 @@ build:
 prod:
 	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
 
-prod-down:
-	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml down
+logs:
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml logs -f
 
 down:
-	docker compose down
+	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml down
 
 validate:
 	docker compose -f docker-compose.yaml -f docker-compose.prod.yaml exec web uv run flask validate
