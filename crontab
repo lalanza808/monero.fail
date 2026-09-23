@@ -10,10 +10,10 @@
 */10 * * * * make -C /opt/monero.fail check >> ~/check.log 2>&1
 
 # every 10 minutes validate up to 50 pending LWS instances
-*/10 * * * * make -C /opt/monero.fail validate_lws >> ~/validate_lws.log 2>&1
+*/10 * * * * make -C /opt/monero.fail validate-lws >> ~/validate_lws.log 2>&1
 
 # every 10 minutes check up to 20 LWS instances
-*/10 * * * * make -C /opt/monero.fail check_lws >> ~/check_lws.log 2>&1
+*/10 * * * * make -C /opt/monero.fail check-lws >> ~/check_lws.log 2>&1
 
 # every day export nodes to list
 20 0 * * * make -C /opt/monero.fail export
