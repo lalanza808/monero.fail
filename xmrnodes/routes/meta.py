@@ -9,8 +9,8 @@ from flask import render_template, flash, Response, jsonify
 from urllib.parse import urlparse
 
 from xmrnodes.helpers import get_highest_block, haversine, get_cached_countries
-from xmrnodes.forms import SubmitNode
-from xmrnodes.models import Node, Peer
+from xmrnodes.forms import SubmitNode, SubmitLWS
+from xmrnodes.models import Node, Peer, LWS
 from xmrnodes import config
 
 
@@ -307,3 +307,72 @@ def find_nearby():
 
     results.sort(key=lambda x: x["distance_km"])
     return jsonify({"nodes": results[:limit], "total": len(results)})
+
+
+@bp.route("/lws", methods=["GET", "POST"])
+def lws():
+    form = SubmitLWS()
+
+    network_type = request.args.get("network", "main")
+
+    # Base query for validated LWS servers
+    servers = LWS.select().where(LWS.validated == True)
+    total_servers = servers.count()
+
+    if network_type:
+        servers = servers.where(LWS.network_type == network_type)
+
+    servers = servers.order_by(LWS.datetime_entered.desc())
+
+    return render_template(
+        "lws.html",
+        servers=servers,
+        form=form,
+    )
+
+
+@bp.route("/add_lws", methods=["POST"])
+def add_lws():
+    if request.method == "POST":
+        url = request.form.get("lws_url", "").strip()
+        contact = request.form.get("contact", "").strip() or None
+        details_url = request.form.get("details_url", "").strip() or None
+        if not url:
+            flash("URL is required")
+            return redirect("/lws")
+        if not contact:
+            flash("Contact information is required")
+            return redirect("/lws")
+        if not details_url:
+            flash("Details URL is required")
+            return redirect("/lws")
+
+        regex = re.compile(
+            r"^(?:http)s?://"  # http:// or https://
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+            r"localhost|"  # localhost...
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"  # ...or ipv4
+            r"\[[\da-fA-F:.]+\])"  # ...or ipv6 in brackets
+            r"(?::\d+)?"  # optional port
+            r"(?:/?|[/?]\S+)$",
+            re.IGNORECASE,
+        )
+        if not regex.match(url):
+            flash("This doesn't look like a valid URL")
+        else:
+            _url = urlparse(url)
+            url = f"{_url.scheme}://{_url.netloc}".lower()
+            if LWS.select().where(LWS.url == url).exists():
+                flash("This LWS server is already in the database.")
+            else:
+                flash(
+                    "Seems like a valid LWS URL. Added to the database and will check soon.",
+                    "success"
+                )
+                lws = LWS(
+                    url=url,
+                    contact=contact,
+                    details_url=details_url,
+                )
+                lws.save()
+    return redirect("/lws")

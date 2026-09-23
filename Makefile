@@ -33,6 +33,12 @@ export:
 peers:
 	docker compose -f docker-compose.prod.yaml exec web uv run flask get_peers
 
+validate-lws:
+	docker compose -f docker-compose.prod.yaml exec web uv run flask validate_lws
+
+check-lws:
+	docker compose -f docker-compose.prod.yaml exec web uv run flask check_lws
+
 html:
 	docker compose -f docker-compose.prod.yaml exec web uv run flask html
 

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<article class="card" style="margin-bottom: 1.5rem;">
+  <header>
+    <h3>About Light-Wallets</h3>
+    <p>
+      Monero wallets require complex scanning and decryption against every transaction on the
+      blockchain to determine if funds were sent to that wallet. This means that every time you go to 
+      spend your Monero you must wait for your device to get synced up which can take a long time.
+    </p>
+    <p>
+      This process can be offloaded to a remote server without giving up the "spend" keys of the wallet. 
+      The LWS (Light Wallet Server) API provides a standard mechanism for splitting the "scanning" process from the "spend" process,
+      giving light wallets an instant sync instead of polling the entire chain.
+    </p>
+    <p>
+      The only downside of this is privacy - the LWS server knows all incoming
+      funds. Make sure this trade-off fits your threat model before registering. If you need full privacy, run your own node or your own LWS instance instead.
+      
+    </p>
+    <p>
+      Helpful links:
+      <ul>
+        <li><a href="https://skylight.magicgrants.org" target="_blank">Skylight Wallet</a> - open-source light-wallet (iOS, Android, Linux, Windows)</li>
+        <li><a href="https://github.com/vtnerd/monero-lws" target="_blank">monero-lws</a> - open-source LWS instance, community standard project</li>
+        <li><a href="https://github.com/lalanza808/lwsadmin" target="_blank">lwsadmin</a> - pre-built LWS with hosting panel for personal use</li>
+      </ul>
+    </p>
+    </header>
+  </article>
+  <article class="card" style="margin-bottom: 1.5rem;">
+    <header>
+    <h3>Add A Light Wallet Server</h3>
+    <p>
+      Submit an LWS URL below to have it monitored.
+    </p>
+  </header>
+  <form method="POST" action="/add_lws">
+    {{ form.csrf_token }}
+    <fieldset class="group">
+      {{ form.lws_url(class="", style="flex: 1;") }}
+      <button type="submit">Submit</button>
+    </fieldset>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
+      <label data-field style="min-width: 0;">
+        {{ form.contact.label }}
+        {{ form.contact(style="width: 100%;") }}
+      </label>
+      <label data-field style="min-width: 0;">
+        {{ form.details_url.label }}
+        {{ form.details_url(style="width: 100%;") }}
+      </label>
+    </div>
+    {% for field, errors in form.errors.items() %}
+      <div role="alert" data-variant="error">{{ form[field].label }}: {{ ', '.join(errors) }}</div>
+    {% endfor %}
+  </form>
+  <p style="margin-top: 0.75rem;">
+    You can automate this process using <strong>curl</strong>.
+  </p>
+  <pre><code>curl -q -X POST https://monero.fail/add_lws -d lws_url="${LWS_URL}" -d contact="${CONTACT}" -d details_url="${DETAILS_URL}"</code></pre>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div role="alert" data-variant="{{ 'warning' if category == 'message' else category }}" style="margin-top: 0.5rem;">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</article>
+
+<article class="card" id="lws-servers">
+  <header>
+    <h3>Light Wallet Servers</h3>
+    <p>
+      Public LWS-compatible servers listed below are checked periodically via their <code>/get_version</code> endpoint.
+    </p>
+    <hr>
+  </header>
+
+  <form style="margin-bottom: 1rem;">
+    <div class="hstack" style="flex-wrap: wrap; gap: 1rem;">
+      <label data-field>
+        Network
+        <select name="network">
+          <option value="main" {% if request.args.get('network', 'main') == 'main' %}selected{% endif %}>Mainnet</option>
+          <option value="test" {% if request.args.get('network') == 'test' %}selected{% endif %}>Testnet</option>
+          <option value="stage" {% if request.args.get('network') == 'stage' %}selected{% endif %}>Stagenet</option>
+        </select>
+      </label>
+    </div>
+    <div class="hstack" style="gap: 0.5rem; margin-top: 0.75rem;">
+      <button type="submit">Filter</button>
+      <a href="/lws#lws-servers" class="button outline">Reset</a>
+    </div>
+  </form>
+
+  {% if servers %}
+    <div class="table" id="table">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>URL</th>
+            <th>Operator</th>
+            <th>Version</th>
+            <th>Monero</th>
+            <th>Height</th>
+            <th>Max Subaddrs</th>
+            <th>History</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for server in servers %}
+          <tr>
+            <td>
+              {% if server.is_tor %}
+              <img src="/static/images/tor.svg" height="20px" alt="Tor">
+              {% elif server.is_i2p %}
+              <img src="/static/images/i2p.svg" height="20px" alt="I2P">
+              {% else %}
+              <img src="/static/images/clearnet.svg" height="20px" alt="Clearnet">
+              {% endif %}
+            </td>
+            <td>
+              <span class="address">{{ server.url }}</span>
+            </td>
+            <td>
+              <a href="{{ server.details_url }}" target="_blank" class="inline">
+                {{ server.contact }}
+                <img src="/static/images/open-link.svg" height="14px" alt="Open">
+              </a>
+            </td>
+            <td>{{ server.server_version or "?" }}</td>
+            <td>{{ server.monero_version_full or "?" }}</td>
+            <td>{{ server.blockchain_height or "?" }}</td>
+            <td>{{ server.max_subaddresses or "?" }}</td>
+            <td>{% for hc in server.healthchecks %}
+              {% if loop.index > loop.length - 6 %}
+              <span class="dot glowing-{% if hc.health %}green{% else %}red{% endif %}"></span>
+              {% endif %}
+            {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p style="text-align: center;">No LWS servers in the database yet...</p>
+  {% endif %}
+</article>
+
+{% endblock %}

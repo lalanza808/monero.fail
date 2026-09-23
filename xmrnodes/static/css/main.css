@@ -86,3 +86,7 @@
 .inline {
     display: inline;
 }
+
+summary {
+    padding: 8px;
+}

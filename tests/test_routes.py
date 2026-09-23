@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import patch
 
 from peewee import SqliteDatabase
-from xmrnodes.models import Node, HealthCheck, Peer
+from xmrnodes.models import Node, HealthCheck, Peer, LWS, LWSHealthCheck
 from xmrnodes.app import app as flask_app
 
 
@@ -18,13 +18,13 @@ def app():
     flask_app.config["TESTING"] = True
     flask_app.config["WTF_CSRF_ENABLED"] = False
 
-    test_db.bind([Node, HealthCheck, Peer])
+    test_db.bind([Node, HealthCheck, Peer, LWS, LWSHealthCheck])
     test_db.connect()
-    test_db.create_tables([Node, HealthCheck, Peer])
+    test_db.create_tables([Node, HealthCheck, Peer, LWS, LWSHealthCheck])
 
     yield flask_app
 
-    test_db.drop_tables([Node, HealthCheck, Peer])
+    test_db.drop_tables([Node, HealthCheck, Peer, LWS, LWSHealthCheck])
     test_db.close()
 
 
@@ -256,3 +256,170 @@ class TestRestApiNearby:
     def test_nearby_missing_params(self, client):
         resp = client.get("/api/v1/nodes/nearby")
         assert resp.status_code == 400
+
+
+class TestAddLWS:
+    """Tests for the /add_lws POST endpoint."""
+
+    _valid_data = {
+        "lws_url": "https://lws.example.com",
+        "contact": "admin@example.com",
+        "details_url": "https://github.com/example/lws",
+    }
+
+    def test_add_valid_lws(self, client):
+        resp = client.post("/add_lws", data=self._valid_data, follow_redirects=True)
+        assert resp.status_code == 200
+        lws = LWS.select().where(LWS.url == "https://lws.example.com").first()
+        assert lws is not None
+        assert lws.contact == "admin@example.com"
+        assert lws.details_url == "https://github.com/example/lws"
+
+    def test_add_missing_contact_rejected(self, client):
+        resp = client.post("/add_lws", data={
+            "lws_url": "https://lws.example.com",
+            "details_url": "https://github.com/example/lws",
+        }, follow_redirects=True)
+        assert LWS.select().count() == 0
+
+    def test_add_missing_details_url_rejected(self, client):
+        resp = client.post("/add_lws", data={
+            "lws_url": "https://lws.example.com",
+            "contact": "admin@example.com",
+        }, follow_redirects=True)
+        assert LWS.select().count() == 0
+
+    def test_add_duplicate_lws_rejected(self, client):
+        client.post("/add_lws", data=self._valid_data, follow_redirects=True)
+        client.post("/add_lws", data=self._valid_data, follow_redirects=True)
+        assert LWS.select().where(LWS.url == "https://lws.example.com").count() == 1
+
+    def test_add_empty_lws_url_rejected(self, client):
+        resp = client.post("/add_lws", data={"lws_url": "", "contact": "x", "details_url": "http://x.com"}, follow_redirects=True)
+        assert LWS.select().count() == 0
+
+    def test_add_invalid_lws_url_rejected(self, client):
+        resp = client.post("/add_lws", data={"lws_url": "not-a-url", "contact": "x", "details_url": "http://x.com"}, follow_redirects=True)
+        assert LWS.select().count() == 0
+
+    def test_add_tor_lws(self, client):
+        resp = client.post("/add_lws", data={
+            "lws_url": "http://abcdef.onion:8443",
+            "contact": "admin@example.com",
+            "details_url": "https://github.com/example/lws",
+        }, follow_redirects=True)
+        assert resp.status_code == 200
+        assert LWS.select().where(LWS.url == "http://abcdef.onion:8443").exists()
+
+    def test_lws_url_normalized_lowercase(self, client):
+        client.post("/add_lws", data={
+            "lws_url": "HTTPS://LWS.Example.COM",
+            "contact": "admin@example.com",
+            "details_url": "https://github.com/example/lws",
+        }, follow_redirects=True)
+        assert LWS.select().where(LWS.url == "https://lws.example.com").exists()
+
+    def test_lws_page_loads(self, client):
+        resp = client.get("/lws")
+        assert resp.status_code == 200
+
+
+def _create_test_lws():
+    """Create a set of test LWS servers for API tests."""
+    lws_data = [
+        {"url": "https://lws1.example.com", "validated": True, "available": True,
+         "network_type": "main", "server_type": "monero-lws", "server_version": "1.1-alpha",
+         "blockchain_height": 3768795, "api_version": 65543, "max_subaddresses": 200,
+         "is_tor": False, "is_i2p": False,
+         "country_code": "US", "country_name": "United States", "city": "New York",
+         "contact": "admin@example.com", "details_url": "https://github.com/example/lws"},
+        {"url": "https://lws2.example.com", "validated": True, "available": True,
+         "network_type": "main", "server_type": "monero-lws", "server_version": "1.0",
+         "blockchain_height": 3768790, "api_version": 65543, "max_subaddresses": 100,
+         "is_tor": False, "is_i2p": False,
+         "country_code": "DE", "country_name": "Germany", "city": "Berlin"},
+        {"url": "http://lwstor.onion:8443", "validated": True, "available": True,
+         "network_type": "main", "server_type": "monero-lws", "server_version": "1.1-alpha",
+         "blockchain_height": 3768795, "api_version": 65543, "max_subaddresses": 200,
+         "is_tor": True, "is_i2p": False},
+        {"url": "https://lws-down.example.com", "validated": True, "available": False,
+         "network_type": "main", "server_type": "monero-lws", "server_version": "0.9",
+         "blockchain_height": 3768000, "is_tor": False, "is_i2p": False},
+    ]
+    for data in lws_data:
+        LWS.create(**data)
+
+
+class TestRestApiLWS:
+    """Tests for the /api/v1/lws/ REST endpoint."""
+
+    def test_list_lws_default(self, client):
+        _create_test_lws()
+        resp = client.get("/api/v1/lws/")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "servers" in data
+        assert "total" in data
+        assert "page" in data
+        assert "per_page" in data
+        assert "pages" in data
+        # Default: healthy=true, network=main
+        assert data["total"] >= 1
+
+    def test_filter_healthy_false(self, client):
+        _create_test_lws()
+        resp = client.get("/api/v1/lws/?healthy=false")
+        data = resp.get_json()
+        for server in data["servers"]:
+            assert server["available"] is False
+
+    def test_filter_all(self, client):
+        _create_test_lws()
+        resp = client.get("/api/v1/lws/?healthy=all")
+        data = resp.get_json()
+        assert data["total"] == 4
+
+    def test_pagination(self, client):
+        _create_test_lws()
+        resp = client.get("/api/v1/lws/?per_page=1&healthy=all")
+        data = resp.get_json()
+        assert data["per_page"] == 1
+        assert len(data["servers"]) <= 1
+        assert data["pages"] >= 1
+
+    def test_lws_detail(self, client):
+        _create_test_lws()
+        from urllib.parse import quote
+        encoded = quote("https://lws1.example.com", safe="")
+        resp = client.get(f"/api/v1/lws/{encoded}")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["url"] == "https://lws1.example.com"
+        assert data["server_type"] == "monero-lws"
+
+    def test_lws_detail_not_found(self, client):
+        _create_test_lws()
+        from urllib.parse import quote
+        encoded = quote("https://nonexistent.example.com", safe="")
+        resp = client.get(f"/api/v1/lws/{encoded}")
+        assert resp.status_code == 404
+
+
+class TestRestApiLWSHealth:
+    """Tests for the /api/v1/lws/health REST endpoint."""
+
+    def test_lws_health_list(self, client):
+        _create_test_lws()
+        lws = LWS.get(LWS.url == "https://lws1.example.com")
+        LWSHealthCheck.create(lws=lws, health=True)
+        LWSHealthCheck.create(lws=lws, health=False)
+
+        resp = client.get("/api/v1/lws/health")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "servers" in data
+        assert "total" in data
+        found = [s for s in data["servers"] if s["url"] == "https://lws1.example.com"]
+        if found:
+            assert "checks" in found[0]
+            assert len(found[0]["checks"]) == 2

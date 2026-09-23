@@ -24,6 +24,7 @@
     <nav style="margin: 1rem 0;">
       <menu class="buttons">
         <li><a href="/" class="button outline">Home</a></li>
+        <li><a href="/lws" class="button outline">Light-Wallets</a></li>
         <li><a href="/about" class="button outline">About</a></li>
         <li><a href="/find" class="button outline">Find Nodes</a></li>
         <li><a href="/map" class="button outline">Peer Map</a></li>
@@ -53,10 +54,17 @@
     {% endblock %}
 
     {% block donate %}
-    <details style="margin-top: 8px;">
+    <details style="margin-top: 4px;">
       <summary style="background-color: rgba(62, 255, 191, 0.5);">Donate</summary>
       <p class="p-2">Please consider donating to fund hosting bills, development, and ongoing maintenance.</p>
       <p class="address" class="p-2"><strong>{{ config.DONATE_ADDRESS }}</strong></p>
+    </details>
+    {% endblock %}
+
+    {% block wallet %}
+    <details style="margin-top: 4px;">
+      <summary style="background-color: rgba(216, 62, 255, 0.5);">Wallets</summary>
+      <p class="p-2">Check out the new <a href="/lws">LWS</a> page for community run Light-Wallet Servers!</p>
     </details>
     {% endblock %}
 

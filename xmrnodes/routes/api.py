@@ -2,7 +2,7 @@ from flask import jsonify, Blueprint
 from flask_restx import Api, Resource, Namespace, fields, reqparse
 
 from xmrnodes.helpers import get_highest_block, haversine
-from xmrnodes.models import Node, HealthCheck, Peer
+from xmrnodes.models import Node, HealthCheck, Peer, LWS, LWSHealthCheck
 from xmrnodes import config
 
 
@@ -111,6 +111,9 @@ ns_health = api.namespace(
 )
 ns_peers = api.namespace(
     "peers", description="Discovered P2P peer information"
+)
+ns_lws = api.namespace(
+    "lws", description="Light Wallet Server (LWS) information"
 )
 
 # --- Response models ---
@@ -629,3 +632,255 @@ class PeerDetail(Resource):
         except Peer.DoesNotExist:
             api.abort(404, f"Peer not found: {decoded_url}")
         return serialize_peer(peer)
+
+
+# --- LWS models ---
+lws_model = api.model("LWS", {
+    "url": fields.String(description="LWS URL (scheme://host:port)"),
+    "available": fields.Boolean(description="Whether the server is currently reachable"),
+    "is_tor": fields.Boolean(description="Whether this is a Tor (.onion) server"),
+    "is_i2p": fields.Boolean(description="Whether this is an I2P (.i2p) server"),
+    "server_type": fields.String(description="LWS server software type (e.g. monero-lws)"),
+    "server_version": fields.String(description="LWS server version"),
+    "last_git_commit_hash": fields.String(description="Git commit hash of the server build"),
+    "last_git_commit_date": fields.String(description="Date of the git commit"),
+    "git_branch_name": fields.String(description="Git branch name"),
+    "monero_version_full": fields.String(description="Full Monero version string"),
+    "blockchain_height": fields.Integer(description="Current blockchain height on the server"),
+    "api_version": fields.Integer(description="LWS API version number"),
+    "max_subaddresses": fields.Integer(description="Maximum subaddresses supported"),
+    "network_type": fields.String(description="Network type: main, test, or stage"),
+    "contact": fields.String(description="Operator contact information"),
+    "details_url": fields.String(description="URL with more details about the server"),
+    "country_name": fields.String(description="Country where server is hosted"),
+    "country_code": fields.String(description="ISO country code"),
+    "city": fields.String(description="City where server is hosted"),
+    "lat": fields.Float(description="Latitude"),
+    "lon": fields.Float(description="Longitude"),
+    "datetime_entered": fields.DateTime(description="When the server was added"),
+    "datetime_checked": fields.DateTime(description="Last time the server was checked"),
+    "datetime_failed": fields.DateTime(description="Last time the server failed a check"),
+    "fail_reason": fields.String(description="Reason for last failure"),
+})
+
+lws_response = api.model("LWSResponse", {
+    "total": fields.Integer(description="Total number of matching LWS servers"),
+    "page": fields.Integer(description="Current page number"),
+    "per_page": fields.Integer(description="Results per page"),
+    "pages": fields.Integer(description="Total number of pages"),
+    "servers": fields.List(fields.Nested(lws_model)),
+})
+
+lws_health_entry = api.model("LWSHealthEntry", {
+    "datetime": fields.DateTime(description="When the check occurred"),
+    "health": fields.Boolean(description="Whether the server was healthy"),
+})
+
+lws_health_model = api.model("LWSHealth", {
+    "url": fields.String(description="LWS URL"),
+    "available": fields.Boolean(description="Current availability status"),
+    "blockchain_height": fields.Integer(description="Last known blockchain height"),
+    "checks": fields.List(fields.Nested(lws_health_entry), description="Recent health checks"),
+})
+
+lws_health_response = api.model("LWSHealthResponse", {
+    "total": fields.Integer(description="Total number of matching servers"),
+    "page": fields.Integer(description="Current page number"),
+    "per_page": fields.Integer(description="Results per page"),
+    "pages": fields.Integer(description="Total number of pages"),
+    "servers": fields.List(fields.Nested(lws_health_model)),
+})
+
+# --- LWS request parsers ---
+lws_parser = reqparse.RequestParser()
+lws_parser.add_argument(
+    "network", type=str, default="main",
+    choices=("main", "test", "stage"),
+    help="Network type",
+    location="args"
+)
+lws_parser.add_argument(
+    "healthy", type=str, default="true",
+    choices=("true", "false", "all"),
+    help="Filter by health status",
+    location="args"
+)
+lws_parser.add_argument(
+    "page", type=int, default=1,
+    help="Page number (1-indexed)",
+    location="args"
+)
+lws_parser.add_argument(
+    "per_page", type=int, default=50,
+    help="Results per page (max 100)",
+    location="args"
+)
+
+lws_health_parser = reqparse.RequestParser()
+lws_health_parser.add_argument(
+    "network", type=str, default="main",
+    choices=("main", "test", "stage"),
+    help="Network type",
+    location="args"
+)
+lws_health_parser.add_argument(
+    "page", type=int, default=1,
+    help="Page number (1-indexed)",
+    location="args"
+)
+lws_health_parser.add_argument(
+    "per_page", type=int, default=25,
+    help="Results per page (max 50)",
+    location="args"
+)
+
+
+# --- LWS helper functions ---
+def serialize_lws(server):
+    """Convert an LWS model instance to a dictionary."""
+    return {
+        "url": server.url,
+        "available": server.available,
+        "is_tor": server.is_tor,
+        "is_i2p": server.is_i2p,
+        "server_type": server.server_type,
+        "server_version": server.server_version,
+        "last_git_commit_hash": server.last_git_commit_hash,
+        "last_git_commit_date": server.last_git_commit_date,
+        "git_branch_name": server.git_branch_name,
+        "monero_version_full": server.monero_version_full,
+        "blockchain_height": server.blockchain_height,
+        "api_version": server.api_version,
+        "max_subaddresses": server.max_subaddresses,
+        "network_type": server.network_type,
+        "contact": server.contact,
+        "details_url": server.details_url,
+        "country_name": server.country_name,
+        "country_code": server.country_code,
+        "city": server.city,
+        "lat": server.lat,
+        "lon": server.lon,
+        "datetime_entered": server.datetime_entered.isoformat() if server.datetime_entered else None,
+        "datetime_checked": server.datetime_checked.isoformat() if server.datetime_checked else None,
+        "datetime_failed": server.datetime_failed.isoformat() if server.datetime_failed else None,
+        "fail_reason": server.fail_reason,
+    }
+
+
+# --- LWS Endpoints ---
+@ns_lws.route("/")
+class LWSList(Resource):
+    @ns_lws.doc("list_lws")
+    @ns_lws.expect(lws_parser)
+    @ns_lws.marshal_with(lws_response)
+    def get(self):
+        """List and filter Light Wallet Servers.
+
+        Returns a paginated list of validated LWS servers. Filter by network type
+        and health status.
+        """
+        args = lws_parser.parse_args()
+        network = args["network"]
+        healthy = args["healthy"]
+        page = max(1, args["page"])
+        per_page = min(100, max(1, args["per_page"]))
+
+        query = LWS.select().where(
+            LWS.validated == True,
+            LWS.network_type == network,
+        )
+
+        if healthy != "all":
+            if healthy == "true":
+                query = query.where(LWS.available == True)
+            else:
+                query = query.where(LWS.available == False)
+
+        query = query.order_by(LWS.datetime_entered.desc())
+        total = query.count()
+        pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, pages)
+        offset = (page - 1) * per_page
+        servers = query.offset(offset).limit(per_page)
+
+        return {
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": pages,
+            "servers": [serialize_lws(s) for s in servers],
+        }
+
+
+@ns_lws.route("/health")
+class LWSHealthList(Resource):
+    @ns_lws.doc("list_lws_health")
+    @ns_lws.expect(lws_health_parser)
+    @ns_lws.marshal_with(lws_health_response)
+    def get(self):
+        """Get health check history for LWS servers.
+
+        Returns paginated servers with their recent health check history.
+        """
+        args = lws_health_parser.parse_args()
+        network = args["network"]
+        page = max(1, args["page"])
+        per_page = min(50, max(1, args["per_page"]))
+
+        query = LWS.select().where(
+            LWS.validated == True,
+            LWS.network_type == network,
+        )
+        query = query.order_by(LWS.datetime_checked.desc())
+
+        total = query.count()
+        pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, pages)
+        offset = (page - 1) * per_page
+        servers = query.offset(offset).limit(per_page)
+
+        results = []
+        for server in servers:
+            checks = (
+                LWSHealthCheck.select()
+                .where(LWSHealthCheck.lws == server)
+                .order_by(LWSHealthCheck.datetime.desc())
+                .limit(20)
+            )
+            results.append({
+                "url": server.url,
+                "available": server.available,
+                "blockchain_height": server.blockchain_height,
+                "checks": [
+                    {
+                        "datetime": c.datetime.isoformat() if c.datetime else None,
+                        "health": c.health,
+                    }
+                    for c in checks
+                ],
+            })
+
+        return {
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": pages,
+            "servers": results,
+        }
+
+
+@ns_lws.route("/<path:lws_url>")
+@ns_lws.param("lws_url", "The LWS URL (URL-encoded, e.g. https%3A%2F%2Fhost%3Aport)")
+class LWSDetail(Resource):
+    @ns_lws.doc("get_lws")
+    @ns_lws.marshal_with(lws_model)
+    @ns_lws.response(404, "LWS not found")
+    def get(self, lws_url):
+        """Get details for a specific LWS server by URL."""
+        from urllib.parse import unquote
+        decoded_url = unquote(lws_url)
+        try:
+            server = LWS.get(LWS.url == decoded_url, LWS.validated == True)
+        except LWS.DoesNotExist:
+            api.abort(404, f"LWS not found: {decoded_url}")
+        return serialize_lws(server)

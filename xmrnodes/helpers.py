@@ -7,7 +7,7 @@ from os import path
 from math import radians, cos, sin, asin, sqrt
 
 import geoip2.database
-from requests import get as r_get
+from requests import get as r_get, post as r_post
 from urllib.parse import urlparse
 from levin.bucket import Bucket
 from levin.ctypes import *
@@ -46,6 +46,31 @@ def make_request(url: str, path="/get_info", data=None):
         timeout=timeout,
         proxies=proxies,
         json=data,
+        headers=headers,
+        verify=True,
+    )
+    r.raise_for_status()
+    return r
+
+
+def make_lws_request(url: str, path="/get_version"):
+    """POST to an LWS endpoint (e.g. /get_version) and return the response."""
+    headers = {"Origin": "https://monero.fail"}
+    if is_onion(url):
+        _p = f"socks5h://{config.TOR_HOST}:{config.TOR_PORT}"
+        proxies = {"http": _p, "https": _p}
+        timeout = 20
+    elif is_i2p(url):
+        _p = f"http://{config.I2P_HOST}:{config.I2P_PORT}"
+        proxies = {"http": _p, "https": _p}
+        timeout = 20
+    else:
+        proxies = None
+        timeout = 10
+    r = r_post(
+        url + path,
+        timeout=timeout,
+        proxies=proxies,
         headers=headers,
         verify=True,
     )
