@@ -15,6 +15,9 @@ build:
 prod:
 	docker compose -f docker-compose.prod.yaml up -d
 
+shell:
+	docker compose -f docker-compose.prod.yaml exec web uv run flask shell
+
 logs:
 	docker compose -f docker-compose.prod.yaml logs -f
 
