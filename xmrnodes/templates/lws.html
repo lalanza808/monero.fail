@@ -24,6 +24,11 @@
       The list below contains community run, open-source LWS instances for you to use.
     </p>
     <p>
+      <strong>Important:</strong> Some LWS operators require you to <strong>register your wallet</strong>
+      before you can use their server. Check the operator's <strong>"Details"</strong> link in the table 
+      below to find out if registration is needed and how to get started.
+    </p>
+    <p>
       Helpful links:
       <ul>
         <li><a href="https://skylight.magicgrants.org" target="_blank">Skylight Wallet</a> - open-source light-wallet (iOS, Android, Linux, Windows)</li>
@@ -107,6 +112,7 @@
             <th>Type</th>
             <th>URL</th>
             <th>Operator</th>
+            <th>Details</th>
             <th>Version</th>
             <th>Monero</th>
             <th>Height</th>
@@ -130,9 +136,12 @@
               <span class="address">{{ server.url }}</span>
             </td>
             <td>
-              <a href="{{ server.details_url }}" target="_blank" class="inline">
-                {{ server.contact }}
-                <img src="/static/images/open-link.svg" height="14px" alt="Open">
+              {{ server.contact }}
+            </td>
+            <td>
+              <a href="{{ server.details_url }}" target="_blank" class="button outline" style="padding: 0.25rem 0.5rem; font-size: 0.85em; white-space: nowrap;">
+                Details
+                <img src="/static/images/open-link.svg" height="12px" alt="Open">
               </a>
             </td>
             <td>{{ server.server_version or "?" }}</td>
